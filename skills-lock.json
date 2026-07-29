@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "skills": {
+    "creating-reanimated-animations": {
+      "source": "estevg/skills",
+      "sourceType": "github",
+      "skillPath": "plugins/creating-reanimated-animations/skills/creating-reanimated-animations/SKILL.md",
+      "computedHash": "3bbe9f16bc5ff898c55854a9c657aa999f55b748f676d17b19c39e5ab4899831"
+    },
+    "expo-react-native-typescript": {
+      "source": "mindrally/skills",
+      "sourceType": "github",
+      "skillPath": "expo-react-native-typescript/SKILL.md",
+      "computedHash": "ae6a3db1d4b800bf9d69e64600bbdccadbacd22b127feeb71a041c56ad4f1e55"
+    },
+    "zustand": {
+      "source": "lobehub/lobehub",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/zustand/SKILL.md",
+      "computedHash": "a30e48757fc553094deb207307474391cb54152010aa9af1baf078c22c679d7d"
+    }
+  }
+}
