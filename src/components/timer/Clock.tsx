@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo } from 'react'
-import { StyleSheet, Text, View } from 'react-native'
+import { StyleSheet, View } from 'react-native'
 import Svg, {
   Circle,
   Defs,
@@ -14,6 +14,8 @@ import Animated, {
 } from 'react-native-reanimated'
 import { Colors } from '../../constants/Colors'
 import type { TimerPhase } from '../../types'
+import { TimerDisplay } from './TimerDisplay'
+import { PomodoroLabel } from './PomodoroLabel'
 
 interface ClockProps {
   /** Fracción de tiempo YA transcurrido: 0 = recién arrancó, 1 = terminó */
@@ -43,12 +45,6 @@ const PHASE_ACCENTS: Record<TimerPhase, PhaseAccent> = {
     ringColor: Colors.accentCyan,
     gradientEndColor: Colors.accentCyan,
   },
-}
-
-const PHASE_LABELS: Record<TimerPhase, string> = {
-  focus: 'Focus',
-  break: 'Break',
-  longBreak: 'Long Break',
 }
 
 const RING_STROKE_WIDTH = 4
@@ -123,7 +119,6 @@ export function Clock({ progress, phase, timeLeftLabel, size = 260 }: ClockProps
   }, [clampedProgress, animatedAngle])
 
   const accent = PHASE_ACCENTS[phase]
-  const phaseLabel = PHASE_LABELS[phase]
 
   const center = size / 2
   const baseRadius = size / 2 - RING_STROKE_WIDTH / 2
@@ -170,8 +165,8 @@ export function Clock({ progress, phase, timeLeftLabel, size = 260 }: ClockProps
         />
       </Svg>
 
-      <Text style={styles.timeText}>{timeLeftLabel}</Text>
-      <Text style={styles.phaseLabel}>{phaseLabel}</Text>
+      <TimerDisplay label={timeLeftLabel} />
+      <PomodoroLabel phase={phase} />
     </View>
   )
 }
@@ -179,19 +174,5 @@ export function Clock({ progress, phase, timeLeftLabel, size = 260 }: ClockProps
 const styles = StyleSheet.create({
   wrapper: {
     alignItems: 'center',
-  },
-  timeText: {
-    marginTop: 20,
-    fontSize: 32,
-    fontWeight: '500',
-    color: Colors.textBright,
-  },
-  phaseLabel: {
-    marginTop: 4,
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 3,
-    textTransform: 'uppercase',
-    color: Colors.textSecondary,
   },
 })
