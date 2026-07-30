@@ -41,6 +41,9 @@ interface AppStoreActions {
 
 export type AppStore = AppStoreState & AppStoreActions
 
+export const selectIsFocusMode = (state: AppStore) =>
+  state.timer.phase === 'focus' && state.timer.status === 'running'
+
 const initialTimer: TimerState = {
   phase: 'focus',
   status: 'idle',
