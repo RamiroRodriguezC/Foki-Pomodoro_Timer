@@ -36,6 +36,7 @@ Estas restricciones son **decisiones de diseño**, no recortes de alcance tempor
 |---|---|
 | Framework | React Native (Expo, última SDK estable) |
 | Lenguaje | TypeScript, `strict: true` |
+| Runtime/Node | Node.js (con loader.js para compatibilidad de type-stripping en node_modules en v24+) |
 | Estado | Zustand + middleware `persist` |
 | Animación | react-native-reanimated + react-native-worklets |
 | Gráficos | react-native-svg (con `LinearGradient`/`Stop` para el dial) |

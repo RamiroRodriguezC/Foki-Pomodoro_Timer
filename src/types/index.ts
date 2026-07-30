@@ -28,6 +28,19 @@ export interface AppSettings {
   binauralEnabled: boolean
 }
 
+export type PanelId = 'settings' | 'sound' | 'queue' | 'about' | null
+
+// Estado del timer basado en timestamp absoluto (Regla dura #12).
+// - Corriendo: `phaseEndsAt` tiene el timestamp de fin, `remainingSecondsPaused` es null.
+// - Pausado: `remainingSecondsPaused` tiene los segundos restantes, `phaseEndsAt` es null.
+export interface TimerState {
+  phase: TimerPhase
+  isRunning: boolean
+  phaseEndsAt: number | null
+  remainingSecondsPaused: number | null
+  sessionsCompletedInCycle: number
+}
+
 export const DEFAULT_SETTINGS: AppSettings = {
   config: {
     focusMinutes: 25,
