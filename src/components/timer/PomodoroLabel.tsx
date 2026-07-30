@@ -1,10 +1,12 @@
 import React from 'react'
-import { StyleSheet, Text } from 'react-native'
+import { Pressable, StyleSheet, Text } from 'react-native'
 import { Colors } from '../../constants/Colors'
 import type { TimerPhase } from '../../types'
 
 interface PomodoroLabelProps {
   phase: TimerPhase
+  isIdle: boolean
+  onPress: () => void
 }
 
 const PHASE_LABELS: Record<TimerPhase, string> = {
@@ -13,11 +15,22 @@ const PHASE_LABELS: Record<TimerPhase, string> = {
   longBreak: 'Long Break',
 }
 
-export function PomodoroLabel({ phase }: PomodoroLabelProps) {
-  return <Text style={styles.phaseLabel}>{PHASE_LABELS[phase]}</Text>
+export function PomodoroLabel({ phase, isIdle, onPress }: PomodoroLabelProps) {
+  return (
+    <Pressable
+      onPress={isIdle ? onPress : undefined}
+      disabled={!isIdle}
+      style={styles.pressable}
+    >
+      <Text style={styles.phaseLabel}>{PHASE_LABELS[phase]}</Text>
+    </Pressable>
+  )
 }
 
 const styles = StyleSheet.create({
+  pressable: {
+    alignSelf: 'center',
+  },
   phaseLabel: {
     marginTop: 4,
     fontSize: 12,

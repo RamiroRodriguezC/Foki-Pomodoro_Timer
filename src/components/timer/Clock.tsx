@@ -14,15 +14,11 @@ import Animated, {
 } from 'react-native-reanimated'
 import { Colors } from '../../constants/Colors'
 import type { TimerPhase } from '../../types'
-import { TimerDisplay } from './TimerDisplay'
-import { PomodoroLabel } from './PomodoroLabel'
 
 interface ClockProps {
   /** Fracción de tiempo YA transcurrido: 0 = recién arrancó, 1 = terminó */
   progress: number
   phase: TimerPhase
-  /** Tiempo restante ya formateado, ej "24:57" */
-  timeLeftLabel: string
   /** Diámetro del círculo */
   size?: number
 }
@@ -108,7 +104,7 @@ function getWedgePath(cx: number, cy: number, r: number, angleDeg: number): stri
   ].join(' ')
 }
 
-export function Clock({ progress, phase, timeLeftLabel, size = 260 }: ClockProps) {
+export function Clock({ progress, phase, size = 260 }: ClockProps) {
   const clampedProgress = Math.min(Math.max(progress, 0), 1)
   const animatedAngle = useSharedValue(clampedProgress * 360)
 
@@ -164,9 +160,6 @@ export function Clock({ progress, phase, timeLeftLabel, size = 260 }: ClockProps
           fill="none"
         />
       </Svg>
-
-      <TimerDisplay label={timeLeftLabel} />
-      <PomodoroLabel phase={phase} />
     </View>
   )
 }

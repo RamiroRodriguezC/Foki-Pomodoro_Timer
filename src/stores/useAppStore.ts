@@ -7,6 +7,7 @@ import {
   PanelId,
   SessionConfig,
   SessionRecord,
+  SessionStatus,
   SoundBarrier,
   TimerPhase,
   TimerState,
@@ -21,13 +22,14 @@ interface AppStoreState {
 
 interface AppStoreActions {
   // Timer
-  startFocus: () => void
+  startCurrentPhase: () => void
   pauseTimer: () => void
   resumeTimer: () => void
   skipPhase: () => void
   completePhase: () => void
   resetTimer: () => void
   getRemainingSeconds: () => number
+  cyclePhase: () => void
   // Settings
   updateSessionConfig: (partial: Partial<SessionConfig>) => void
   setSoundBarrier: (soundBarrier: SoundBarrier) => void
@@ -41,7 +43,7 @@ export type AppStore = AppStoreState & AppStoreActions
 
 const initialTimer: TimerState = {
   phase: 'focus',
-  isRunning: false,
+  status: 'idle',
   phaseEndsAt: null,
   remainingSecondsPaused: null,
   sessionsCompletedInCycle: 0,
@@ -66,23 +68,22 @@ export const useAppStore = create<AppStore>()(
       history: [],
       activePanel: null,
 
-      startFocus: () => {
+      startCurrentPhase: () => {
         const { settings, timer } = get()
-        const minutes = phaseDurationMinutes('focus', settings.config)
+        const minutes = phaseDurationMinutes(timer.phase, settings.config)
         set({
           timer: {
-            phase: 'focus',
-            isRunning: true,
+            ...timer,
+            status: 'running',
             phaseEndsAt: Date.now() + minutes * 60_000,
             remainingSecondsPaused: null,
-            sessionsCompletedInCycle: timer.sessionsCompletedInCycle,
           },
         })
       },
 
       pauseTimer: () => {
         const { timer } = get()
-        if (!timer.isRunning || timer.phaseEndsAt === null) return
+        if (timer.status !== 'running' || timer.phaseEndsAt === null) return
         const remainingSecondsPaused = Math.max(
           0,
           Math.round((timer.phaseEndsAt - Date.now()) / 1000)
@@ -90,7 +91,7 @@ export const useAppStore = create<AppStore>()(
         set({
           timer: {
             ...timer,
-            isRunning: false,
+            status: 'paused',
             phaseEndsAt: null,
             remainingSecondsPaused,
           },
@@ -99,11 +100,11 @@ export const useAppStore = create<AppStore>()(
 
       resumeTimer: () => {
         const { timer } = get()
-        if (timer.isRunning || timer.remainingSecondsPaused === null) return
+        if (timer.status !== 'paused' || timer.remainingSecondsPaused === null) return
         set({
           timer: {
             ...timer,
-            isRunning: true,
+            status: 'running',
             phaseEndsAt: Date.now() + timer.remainingSecondsPaused * 1000,
             remainingSecondsPaused: null,
           },
@@ -144,7 +145,7 @@ export const useAppStore = create<AppStore>()(
           history: [...history, record],
           timer: {
             phase: upcomingPhase,
-            isRunning: true,
+            status: 'running',
             phaseEndsAt: Date.now() + nextMinutes * 60_000,
             remainingSecondsPaused: null,
             sessionsCompletedInCycle,
@@ -156,13 +157,22 @@ export const useAppStore = create<AppStore>()(
 
       getRemainingSeconds: () => {
         const { timer, settings } = get()
-        if (timer.isRunning && timer.phaseEndsAt !== null) {
+        if (timer.status === 'running' && timer.phaseEndsAt !== null) {
           return Math.max(0, Math.round((timer.phaseEndsAt - Date.now()) / 1000))
         }
-        if (timer.remainingSecondsPaused !== null) {
+        if (timer.status === 'paused' && timer.remainingSecondsPaused !== null) {
           return timer.remainingSecondsPaused
         }
         return phaseDurationMinutes(timer.phase, settings.config) * 60
+      },
+
+      cyclePhase: () => {
+        const { timer } = get()
+        if (timer.status !== 'idle') return
+        const phases: TimerPhase[] = ['focus', 'break', 'longBreak']
+        const currentIndex = phases.indexOf(timer.phase)
+        const nextPhase = phases[(currentIndex + 1) % phases.length]
+        set({ timer: { ...timer, phase: nextPhase } })
       },
 
       updateSessionConfig: (partial) => {
@@ -185,6 +195,24 @@ export const useAppStore = create<AppStore>()(
     {
       name: 'foki-app-storage',
       storage: createJSONStorage(() => storage),
+      version: 1,
+      migrate: (persistedState: any, version: number) => {
+        if (version < 1 || (persistedState?.timer && !persistedState.timer.status)) {
+          const timer = persistedState?.timer || {}
+          let status: SessionStatus = 'idle'
+          if (timer.phaseEndsAt !== null) {
+            status = 'running'
+          } else if (timer.remainingSecondsPaused !== null) {
+            status = 'paused'
+          }
+          persistedState.timer = {
+            ...timer,
+            status,
+            isRunning: undefined,
+          }
+        }
+        return persistedState
+      },
       // `activePanel` es estado de UI efímero: no se persiste.
       partialize: (state) => ({
         settings: state.settings,

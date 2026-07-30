@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import { Pressable, StyleSheet } from 'react-native'
+import { Pressable, StyleSheet, View } from 'react-native'
 import { Clock } from './Clock'
+import { TimerDisplay } from './TimerDisplay'
+import { PomodoroLabel } from './PomodoroLabel'
 import { useAppStore, phaseDurationMinutes } from '../../stores/useAppStore'
 
 function formatMMSS(totalSeconds: number): string {
@@ -13,17 +15,18 @@ export function Timer() {
   const timer = useAppStore((state) => state.timer)
   const settings = useAppStore((state) => state.settings)
   const getRemainingSeconds = useAppStore((state) => state.getRemainingSeconds)
-  const startFocus = useAppStore((state) => state.startFocus)
+  const startCurrentPhase = useAppStore((state) => state.startCurrentPhase)
   const pauseTimer = useAppStore((state) => state.pauseTimer)
   const resumeTimer = useAppStore((state) => state.resumeTimer)
   const completePhase = useAppStore((state) => state.completePhase)
+  const cyclePhase = useAppStore((state) => state.cyclePhase)
 
   // Solo dispara re-renders cada 1s (Regla dura #12) — el valor mostrado
   // siempre sale de recalcular contra Date.now(), nunca de este contador.
   const [, forceTick] = useState(0)
 
   useEffect(() => {
-    if (!timer.isRunning) return
+    if (timer.status !== 'running') return
 
     const id = setInterval(() => {
       if (getRemainingSeconds() <= 0) {
@@ -34,17 +37,16 @@ export function Timer() {
     }, 1000)
 
     return () => clearInterval(id)
-  }, [timer.isRunning, timer.phaseEndsAt, getRemainingSeconds, completePhase])
+  }, [timer.status, timer.phaseEndsAt, getRemainingSeconds, completePhase])
 
   const remainingSeconds = getRemainingSeconds()
   const totalSeconds = phaseDurationMinutes(timer.phase, settings.config) * 60
   const progress = totalSeconds > 0 ? 1 - remainingSeconds / totalSeconds : 0
-  const hasStarted = timer.phaseEndsAt !== null || timer.remainingSecondsPaused !== null
 
-  const handlePress = () => {
-    if (!hasStarted) {
-      startFocus()
-    } else if (timer.isRunning) {
+  const handleTogglePress = () => {
+    if (timer.status === 'idle') {
+      startCurrentPhase()
+    } else if (timer.status === 'running') {
       pauseTimer()
     } else {
       resumeTimer()
@@ -52,13 +54,17 @@ export function Timer() {
   }
 
   return (
-    <Pressable onPress={handlePress} style={styles.wrapper}>
-      <Clock
-        progress={progress}
+    <View style={styles.wrapper}>
+      <Pressable onPress={handleTogglePress}>
+        <Clock progress={progress} phase={timer.phase} />
+      </Pressable>
+      <TimerDisplay label={formatMMSS(remainingSeconds)} />
+      <PomodoroLabel
         phase={timer.phase}
-        timeLeftLabel={formatMMSS(remainingSeconds)}
+        isIdle={timer.status === 'idle'}
+        onPress={cyclePhase}
       />
-    </Pressable>
+    </View>
   )
 }
 

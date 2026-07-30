@@ -1,4 +1,5 @@
 export type TimerPhase = 'focus' | 'break' | 'longBreak'
+export type SessionStatus = 'idle' | 'running' | 'paused'
 export type SoundBarrier = 'none' | 'pinkNoise' | 'classic' | 'loFi' | 'ambient'
 
 export interface SessionConfig {
@@ -31,11 +32,12 @@ export interface AppSettings {
 export type PanelId = 'settings' | 'sound' | 'queue' | 'about' | null
 
 // Estado del timer basado en timestamp absoluto (Regla dura #12).
-// - Corriendo: `phaseEndsAt` tiene el timestamp de fin, `remainingSecondsPaused` es null.
-// - Pausado: `remainingSecondsPaused` tiene los segundos restantes, `phaseEndsAt` es null.
+// - 'idle': `phaseEndsAt` y `remainingSecondsPaused` son null. Sesión no iniciada.
+// - 'running': `phaseEndsAt` tiene el timestamp de fin, `remainingSecondsPaused` es null.
+// - 'paused': `remainingSecondsPaused` tiene los segundos restantes, `phaseEndsAt` es null.
 export interface TimerState {
   phase: TimerPhase
-  isRunning: boolean
+  status: SessionStatus
   phaseEndsAt: number | null
   remainingSecondsPaused: number | null
   sessionsCompletedInCycle: number
