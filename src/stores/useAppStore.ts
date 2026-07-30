@@ -28,6 +28,7 @@ interface AppStoreActions {
   skipPhase: () => void
   completePhase: () => void
   resetTimer: () => void
+  cancelToIdle: () => void
   getRemainingSeconds: () => number
   cyclePhase: () => void
   // Settings
@@ -157,6 +158,22 @@ export const useAppStore = create<AppStore>()(
       },
 
       resetTimer: () => set({ timer: initialTimer }),
+
+      // Cancela la sesión en curso sin tocar la fase ni el conteo del ciclo —
+      // vuelve a 'idle' en la MISMA fase en la que estaba pausado. Distinto de
+      // resetTimer(), que hace un reset duro a focus/idle y borra sessionsCompletedInCycle.
+      cancelToIdle: () => {
+        const { timer } = get()
+        if (timer.status !== 'paused') return
+        set({
+          timer: {
+            ...timer,
+            status: 'idle',
+            phaseEndsAt: null,
+            remainingSecondsPaused: null,
+          },
+        })
+      },
 
       getRemainingSeconds: () => {
         const { timer, settings } = get()

@@ -4,6 +4,7 @@ import { Clock } from './Clock'
 import { TimerDisplay } from './TimerDisplay'
 import { PomodoroLabel } from './PomodoroLabel'
 import { useAppStore, phaseDurationMinutes } from '../../stores/useAppStore'
+import { ResetButton } from './ResetButton'
 
 function formatMMSS(totalSeconds: number): string {
   const minutes = Math.floor(totalSeconds / 60)
@@ -64,6 +65,7 @@ export function Timer() {
         isIdle={timer.status === 'idle'}
         onPress={cyclePhase}
       />
+      <ResetButton />
     </View>
   )
 }

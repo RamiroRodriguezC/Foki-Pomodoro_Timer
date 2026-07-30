@@ -21,7 +21,7 @@ interface TaskItemProps {
 // Tras tocar: se tacha visualmente y desaparece a los 1.5s (FR6).
 // La tarea siguiente asciende sola porque selectActiveTasks recalcula
 // contra el array reindexado — no hay lógica de "ascenso" acá (Regla #8).
-const REMOVE_DELAY_MS = 150
+const REMOVE_DELAY_MS = 300
 const STRIKE_ANIMATION_DURATION = 200
 
 export function TaskItem({ task, isPrimary }: TaskItemProps) {
