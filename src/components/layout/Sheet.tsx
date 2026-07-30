@@ -50,11 +50,11 @@ export function Sheet({ visible, onClose, children }: SheetProps) {
 
 const styles = StyleSheet.create({
   backdrop: {
-    ...StyleSheet.absoluteFill,
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: Colors.overlay,
   },
   centerWrapper: {
-    ...StyleSheet.absoluteFill,
+    ...StyleSheet.absoluteFillObject,
     justifyContent: isWeb ? 'center' : 'flex-end',
     alignItems: isWeb ? 'center' : 'stretch',
   },
