@@ -47,7 +47,7 @@ const initialTimer: TimerState = {
   sessionsCompletedInCycle: 0,
 }
 
-const phaseDurationMinutes = (phase: TimerPhase, config: SessionConfig): number => {
+export const phaseDurationMinutes = (phase: TimerPhase, config: SessionConfig): number => {
   switch (phase) {
     case 'focus':
       return config.focusMinutes
