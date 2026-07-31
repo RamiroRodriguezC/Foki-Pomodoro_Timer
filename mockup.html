@@ -1,0 +1,65 @@
+<h2 class="sr-only">Mockup actualizado del bottom sheet: nombre de pista pegado a la fila seleccionada y lista con scroll interno acotado</h2>
+<div style="background:#0B0A14;border-radius:12px;padding:2rem 1.25rem;display:flex;flex-direction:column;align-items:center;gap:1rem;max-width:380px;margin:0 auto;">
+
+  <div style="width:100%;background:#1B1830;border:1px solid #2A2547;border-radius:16px;padding:1rem 1.1rem;">
+    <div style="width:36px;height:4px;background:#2A2547;border-radius:2px;margin:0 auto 12px;"></div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 4px;border-bottom:1px solid #2A2547;margin-bottom:8px;">
+      <div style="display:flex;align-items:center;gap:8px;color:#E8E6F5;font-size:14px;"><i class="ti ti-volume-3" style="font-size:16px;" aria-hidden="true"></i>Silencio</div>
+      <i class="ti ti-chevron-right" style="font-size:14px;color:#5C5878;" aria-hidden="true"></i>
+    </div>
+
+    <div style="display:flex;background:#0B0A14;border-radius:10px;padding:3px;margin-bottom:8px;">
+      <button id="tab-amb" onclick="setTab('amb')" style="flex:1;border:none;padding:7px;border-radius:8px;font-size:13px;background:transparent;color:#9490B5;">Ambientes</button>
+      <button id="tab-mus" onclick="setTab('mus')" style="flex:1;border:none;padding:7px;border-radius:8px;font-size:13px;background:#262143;color:#FFFFFF;">Música</button>
+    </div>
+
+    <div style="position:relative;">
+      <div id="list-amb" style="display:none;flex-direction:column;max-height:118px;overflow-y:auto;">
+        <div style="display:flex;align-items:center;gap:10px;padding:7px 4px;font-size:13.5px;color:#E8E6F5;"><i class="ti ti-headphones" style="font-size:16px;" aria-hidden="true"></i>Ruido rosa <span style="color:#5C5878;font-size:11px;">285 Hz</span></div>
+        <div style="display:flex;align-items:center;gap:10px;padding:7px 4px;font-size:13.5px;color:#E8E6F5;"><i class="ti ti-cloud-rain" style="font-size:16px;" aria-hidden="true"></i>Lluvia</div>
+        <div style="display:flex;align-items:center;gap:10px;padding:7px 4px;font-size:13.5px;color:#E8E6F5;"><i class="ti ti-trees" style="font-size:16px;" aria-hidden="true"></i>Bosque</div>
+        <div style="display:flex;align-items:center;gap:10px;padding:7px 4px;font-size:13.5px;color:#E8E6F5;"><i class="ti ti-coffee" style="font-size:16px;" aria-hidden="true"></i>Café</div>
+        <div style="display:flex;align-items:center;gap:10px;padding:7px 4px;font-size:13.5px;color:#E8E6F5;"><i class="ti ti-waveform" style="font-size:16px;" aria-hidden="true"></i>Olas</div>
+        <div style="display:flex;align-items:center;gap:10px;padding:7px 4px;font-size:13.5px;color:#E8E6F5;"><i class="ti ti-flame" style="font-size:16px;" aria-hidden="true"></i>Fuego</div>
+      </div>
+
+      <div id="list-mus" style="display:flex;flex-direction:column;max-height:118px;overflow-y:auto;">
+        <div style="padding:6px 4px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="display:flex;align-items:center;gap:10px;font-size:13.5px;color:#4CFFB0;font-weight:500;"><i class="ti ti-coffee" style="font-size:16px;" aria-hidden="true"></i>Lo-Fi</div>
+            <span style="font-size:12px;color:#4FE0FF;display:flex;align-items:center;gap:4px;"><i class="ti ti-player-track-next" style="font-size:14px;" aria-hidden="true"></i>Saltar</span>
+          </div>
+          <div style="font-size:11.5px;color:#9490B5;margin:2px 0 0 26px;">Midnight Focus</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:7px 4px;font-size:13.5px;color:#E8E6F5;"><i class="ti ti-piano" style="font-size:16px;" aria-hidden="true"></i>Piano</div>
+        <div style="display:flex;align-items:center;gap:10px;padding:7px 4px;font-size:13.5px;color:#E8E6F5;"><i class="ti ti-music" style="font-size:16px;" aria-hidden="true"></i>Clásica</div>
+      </div>
+      <div style="position:absolute;bottom:0;left:0;right:0;height:18px;background:linear-gradient(to bottom, rgba(27,24,48,0), rgba(27,24,48,1));pointer-events:none;"></div>
+    </div>
+
+    <div style="border-top:1px solid #2A2547;margin-top:6px;padding-top:10px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <i class="ti ti-volume-2" style="font-size:15px;color:#9490B5;" aria-hidden="true"></i>
+        <input type="range" min="0" max="100" value="60" style="flex:1;">
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:13px;color:#E8E6F5;">Reproducción inteligente</span>
+        <div style="width:34px;height:19px;background:#4CFFB0;border-radius:10px;position:relative;">
+          <div style="width:15px;height:15px;background:#0B0A14;border-radius:50%;position:absolute;right:2px;top:2px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p style="font-size:11px;color:#5C5878;margin:0;">degradé abajo = pista de scroll; nombre de pista pegado a la fila activa</p>
+</div>
+<script>
+function setTab(t){
+  document.getElementById('list-amb').style.display = t==='amb' ? 'flex' : 'none';
+  document.getElementById('list-mus').style.display = t==='mus' ? 'flex' : 'none';
+  document.getElementById('tab-amb').style.background = t==='amb' ? '#262143' : 'transparent';
+  document.getElementById('tab-amb').style.color = t==='amb' ? '#FFFFFF' : '#9490B5';
+  document.getElementById('tab-mus').style.background = t==='mus' ? '#262143' : 'transparent';
+  document.getElementById('tab-mus').style.color = t==='mus' ? '#FFFFFF' : '#9490B5';
+}
+</script>

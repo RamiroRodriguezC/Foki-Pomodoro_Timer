@@ -154,24 +154,30 @@ src/
 ├── App.tsx
 ├── constants/
 │   ├── Colors.ts
-│   └── Sounds.ts
+│   └── SoundLibrary.ts       // tracks de audio: AMBIENT_LIBRARY, MUSIC_LIBRARY, gongs
 ├── types/
 │   └── index.ts
 ├── stores/
 │   ├── useAppStore.ts      // timer, fases, settings, historial, UI panels
-│   └── useTaskStore.ts     // tareas + selectores derivados "activeTasks" (máx 3) / "queuedTasks"
+│   ├── useTaskStore.ts     // tareas + selectores derivados "activeTasks" (máx 3) / "queuedTasks"
+│   └── useAudioStore.ts    // estado efímero de reproducción (no persiste)
 ├── services/
 │   ├── storage.ts
-│   └── AudioService.ts
+│   └── AudioService.ts     // wrapper imperativo sobre expo-audio (createAudioPlayer)
 └── components/
     ├── layout/
     │   ├── Sheet.tsx
     │   └── Topbar.tsx
+    ├── audio/
+    │   ├── AudioPill.tsx   // píldora superior: selección + play/pause
+    │   ├── AudioSheet.tsx  // panel selector: silencio/ambientes/música + volumen
+    │   └── audioMeta.tsx   // registry de íconos/labels de tracks y géneros
     ├── timer/
     │   ├── Timer.tsx
     │   ├── Clock.tsx
     │   ├── TimerDisplay.tsx
-    │   └── PomodoroLabel.tsx
+    │   ├── PomodoroLabel.tsx
+    │   └── ResetButton.tsx
     ├── tasks/
     │   ├── TaskList.tsx
     │   ├── TaskItem.tsx
@@ -195,8 +201,8 @@ Sounds/
     │   ├── Ambient/     //pistas de sonido ambiente
     │   ├── Classic/     //pistas de musica clasica
     │   ├── Lo-Fi/       //pistas de Lo-Fi
-    │   └── PinkNoise.mp3 (pista de Pink Noise brindad por Noise Foundation).
-    ├── binauralTone.mp3
+    │   └── PinkNoise.mp3 (pista de Pink Noise brindada por Noise Foundation).
+    └── BinauralTone.mp3
 ```
 ---
 ## 7. Requerimientos funcionales

@@ -1,12 +1,15 @@
 import { StatusBar } from 'expo-status-bar'
 import { StyleSheet, View } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
+import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { Colors } from './constants/Colors'
 import { Timer } from './components/timer/Timer'
 import { TaskList } from './components/tasks/TaskList'
 import { TaskInput } from './components/tasks/TaskInput'
 import { QueueButton } from './components/tasks/QueueButton'
 import { TaskQueue } from './components/tasks/TaskQueue'
+import { Topbar } from './components/layout/Topbar'
+import { AudioSheet } from './components/audio/AudioSheet'
 import { Sheet } from './components/layout/Sheet'
 import { useAppStore } from './stores/useAppStore'
 
@@ -16,16 +19,22 @@ export default function App() {
 
   return (
     <GestureHandlerRootView style={styles.flex}>
-      <View style={styles.container}>
-        <Timer />
-        <TaskList />
-        <TaskInput />
-        <QueueButton />
-        <Sheet visible={activePanel === 'queue'} onClose={closePanel}>
-          <TaskQueue />
-        </Sheet>
-        <StatusBar style="light" />
-      </View>
+      <SafeAreaProvider>
+        <View style={styles.container}>
+          <Topbar />
+          <Timer />
+          <TaskList />
+          <TaskInput />
+          <QueueButton />
+          <Sheet visible={activePanel === 'queue'} onClose={closePanel}>
+            <TaskQueue />
+          </Sheet>
+          <Sheet visible={activePanel === 'sound'} onClose={closePanel}>
+            <AudioSheet />
+          </Sheet>
+          <StatusBar style="light" />
+        </View>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   )
 }

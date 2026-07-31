@@ -1,6 +1,18 @@
 export type TimerPhase = 'focus' | 'break' | 'longBreak'
 export type SessionStatus = 'idle' | 'running' | 'paused'
-export type SoundBarrier = 'none' | 'pinkNoise' | 'classic' | 'loFi' | 'ambient'
+
+// Tipo viejo de SoundBarrier (eliminado en Fase 1):
+// type SoundBarrier = 'none' | 'pinkNoise' | 'classic' | 'loFi' | 'ambient'
+// Migración de store en Fase 2 necesita saber el shape anterior.
+
+export type SoundCategory = 'silence' | 'ambient' | 'music'
+export type MusicGenre = 'loFi' | 'classical' // 'piano' se agrega el día que exista assets/Sounds/SoundBarrier/Piano/
+
+export interface SoundSelection {
+  category: SoundCategory
+  ambientTrackId: string | null   // id de track en AMBIENT_LIBRARY; null si category !== 'ambient'
+  musicGenre: MusicGenre | null   // género en MUSIC_LIBRARY; null si category !== 'music'
+}
 
 export interface SessionConfig {
   focusMinutes: number
@@ -25,8 +37,10 @@ export interface Task {
 
 export interface AppSettings {
   config: SessionConfig
-  soundBarrier: SoundBarrier
-  binauralEnabled: boolean
+  soundSelection: SoundSelection
+  volume: number            // 0 a 1
+  autoSyncEnabled: boolean  // "Reproducción inteligente" — sync con fases del timer
+  binauralEnabled: boolean  // sin tocar, ya existe
 }
 
 export type PanelId = 'settings' | 'sound' | 'queue' | 'about' | null
@@ -50,6 +64,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
     longBreakMinutes: 15,
     sessionsBeforeLongBreak: 4,
   },
-  soundBarrier: 'none',
+  soundSelection: { category: 'silence', ambientTrackId: null, musicGenre: null },
+  volume: 0.6,
+  autoSyncEnabled: true,
   binauralEnabled: false,
 }
