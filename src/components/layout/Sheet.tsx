@@ -37,14 +37,19 @@ export function Sheet({ visible, onClose, children }: SheetProps) {
 
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
-      <Animated.View style={[styles.backdrop, backdropStyle]}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
-      </Animated.View>
-      <View style={styles.centerWrapper} pointerEvents="box-none">
-        <Animated.View style={[styles.panel, isWeb ? styles.panelWeb : styles.panelNative, panelStyle]}>
-          <GestureHandlerRootView style={styles.gestureRoot}>{children}</GestureHandlerRootView>
+      {/* GestureHandlerRootView debe ser raíz del Modal: en Android el Modal abre
+          una ventana nativa separada y el root de App.tsx no captura gestos ahí.
+          El Sortable (react-native-reanimated-dnd) necesita este root para el drag. */}
+      <GestureHandlerRootView style={StyleSheet.absoluteFill}>
+        <Animated.View style={[styles.backdrop, backdropStyle]}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
         </Animated.View>
-      </View>
+        <View style={styles.centerWrapper} pointerEvents="box-none">
+          <Animated.View style={[styles.panel, isWeb ? styles.panelWeb : styles.panelNative, panelStyle]}>
+            {children}
+          </Animated.View>
+        </View>
+      </GestureHandlerRootView>
     </Modal>
   )
 }
@@ -77,5 +82,4 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 32,
   },
-  gestureRoot: { width: '100%' },
 })

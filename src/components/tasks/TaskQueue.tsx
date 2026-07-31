@@ -33,7 +33,14 @@ export function TaskQueue() {
     (props: SortableRenderItemProps<Task>) => {
       const { item, id, ...rest } = props
       return (
-        <SortableItem key={id} id={id} data={item} onDrop={handleDrop} {...rest}>
+        <SortableItem
+          key={id}
+          id={id}
+          data={item}
+          onDrop={handleDrop}
+          style={styles.itemContainer}
+          {...rest}
+        >
           <View style={styles.row}>
             <Pressable
               style={styles.textArea}
@@ -107,10 +114,27 @@ export function TaskQueue() {
   }
 
   /* --- Native: Sortable drag & drop --- */
-  return <Sortable data={queuedTasks} renderItem={renderSortableItem} itemHeight={ITEM_HEIGHT} />
+  // Sortable usa position:absolute internamente, no aporta altura al padre.
+  // Envolvemos en un View con altura explícita para que el Sheet se dimensione bien.
+  const listHeight = queuedTasks.length * ITEM_HEIGHT
+  return (
+    <View style={[styles.listContainer, { height: listHeight }]}>
+      <Sortable data={queuedTasks} renderItem={renderSortableItem} itemHeight={ITEM_HEIGHT} />
+    </View>
+  )
 }
 
 const styles = StyleSheet.create({
+  // Contenedor que crea la librería alrededor del item (position:absolute).
+  // Sin fondo, los huecos del drag muestran transparente/blanco.
+  itemContainer: {
+    backgroundColor: Colors.surface,
+  },
+  // Wrapper de altura explícita — fondo para que los springs del drag no
+  // dejen huecos visibles.
+  listContainer: {
+    backgroundColor: Colors.surface,
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
