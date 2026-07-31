@@ -2,11 +2,8 @@ import React from 'react'
 import { StyleSheet, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { AudioPill } from '../audio/AudioPill'
+import { SettingsButton } from '../settings/SettingsButton'
 
-/**
- * Header superior: esquina superior derecha con la AudioPill.
- * En web los insets son 0; en mobile respeta la muesca.
- */
 export function Topbar() {
   const insets = useSafeAreaInsets()
 
@@ -15,6 +12,7 @@ export function Topbar() {
       style={[styles.wrapper, { paddingTop: insets.top + 8 }]}
       pointerEvents="box-none"
     >
+      <SettingsButton />
       <AudioPill />
     </View>
   )
@@ -26,7 +24,9 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    alignItems: 'flex-end',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 16,
   },
 })

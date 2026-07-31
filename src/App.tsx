@@ -12,6 +12,7 @@ import { Topbar } from './components/layout/Topbar'
 import { AudioSheet } from './components/audio/AudioSheet'
 import { Sheet } from './components/layout/Sheet'
 import { useAppStore } from './stores/useAppStore'
+import { SettingsPanel } from './components/settings/SettingsPanel'
 
 export default function App() {
   const activePanel = useAppStore((state) => state.activePanel)
@@ -31,6 +32,9 @@ export default function App() {
           </Sheet>
           <Sheet visible={activePanel === 'sound'} onClose={closePanel}>
             <AudioSheet />
+          </Sheet>
+          <Sheet visible={activePanel === 'settings'} onClose={closePanel}>
+            <SettingsPanel />
           </Sheet>
           <StatusBar style="light" />
         </View>
