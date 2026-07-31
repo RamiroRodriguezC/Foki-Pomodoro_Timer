@@ -42,7 +42,9 @@ export function Timer() {
 
   const remainingSeconds = getRemainingSeconds()
   const totalSeconds = phaseDurationMinutes(timer.phase, settings.config) * 60
-  const progress = totalSeconds > 0 ? 1 - remainingSeconds / totalSeconds : 0
+  // Fracción de tiempo RESTANTE: 1 = círculo lleno (recién iniciado),
+  // 0 = vacío (llegó a 00:00). El wedge se vacía conforme pasa el tiempo.
+  const progress = totalSeconds > 0 ? remainingSeconds / totalSeconds : 0
 
   const handleTogglePress = () => {
     if (timer.status === 'idle') {

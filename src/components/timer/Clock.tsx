@@ -16,7 +16,7 @@ import { Colors } from '../../constants/Colors'
 import type { TimerPhase } from '../../types'
 
 interface ClockProps {
-  /** Fracción de tiempo YA transcurrido: 0 = recién arrancó, 1 = terminó */
+  /** Fracción de tiempo RESTANTE: 1 = círculo lleno (recién iniciado), 0 = vacío (terminó) */
   progress: number
   phase: TimerPhase
   /** Diámetro del círculo */
@@ -139,7 +139,7 @@ export function Clock({ progress, phase, size = 260 }: ClockProps) {
           </LinearGradient>
         </Defs>
 
-        {/* Disco base: representa el tiempo restante */}
+        {/* Disco base: fondo del reloj (tiempo ya consumido) */}
         <Circle
           cx={center}
           cy={center}
@@ -147,7 +147,8 @@ export function Clock({ progress, phase, size = 260 }: ClockProps) {
           fill={Colors.backgroundElevated}
         />
 
-        {/* Wedge de progreso: representa el tiempo transcurrido */}
+        {/* Wedge de progreso: representa el tiempo restante — lleno al iniciar,
+            se vacía en sentido horario hasta 0° al llegar a 00:00 */}
         <AnimatedPath animatedProps={animatedProps} fill={`url(#${gradientId})`} />
 
         {/* Anillo exterior estático, marco de la fase activa */}

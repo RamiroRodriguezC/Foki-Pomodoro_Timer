@@ -85,10 +85,10 @@ Valores de partida: Pueden agregarse nuevos colores o modificarse de ser necesar
 
 ### 4.3 Dial (componente Clock)
  
-Mecánica: un **wedge (porción de pie) sólido que avanza en sentido horario desde las 12**, "comiéndose" el círculo a medida que pasa el tiempo — no es un arco de stroke ni un dial con marcas tipo reloj analógico.
+Mecánica: un **wedge (porción de pie) sólido que arranca lleno (360°) y se va "vaciando" en sentido horario desde las 12** a medida que pasa el tiempo — no es un arco de stroke ni un dial con marcas tipo reloj analógico.
  
-- **Círculo base:** disco completo relleno con el color de "tiempo restante" (`backgroundElevated` o un tono apenas más claro que el fondo). Representa el 100% de la fase antes de empezar.
-- **Wedge de progreso:** porción de pie sólida que arranca en 0° (12 en punto) y crece en sentido horario a medida que el tiempo transcurre, hasta cubrir el círculo completo al llegar a 00:00. Relleno con el gradiente de marca (`gradientStart → gradientMid → gradientEnd`); en break usa `accentGreen` como color sólido o extremo de gradiente, en longBreak `accentCyan`.
+- **Círculo base:** disco completo relleno con el color de "tiempo consumido" (`backgroundElevated` o un tono apenas más claro que el fondo). Se va descubriendo conforme el wedge se vacía.
+- **Wedge de progreso:** porción de pie sólida que arranca cubriendo el círculo completo (360°) al iniciar la fase y se reduce en sentido horario a medida que el tiempo transcurre, hasta quedar en 0° al llegar a 00:00 — representa el tiempo RESTANTE. Relleno con el gradiente de marca (`gradientStart → gradientMid → gradientEnd`); en break usa `accentGreen` como color sólido o extremo de gradiente, en longBreak `accentCyan`.
 - **Anillo exterior:** aro fino/medio estático (no anima) alrededor de todo el círculo, en el color de acento de la fase activa — es un marco, no participa del progreso.
 - **Marcas de referencia (opcional, muy sutil):** como mucho 4 marcas discretas en los puntos cardinales (12/3/6/9), no un dial completo de 60 ticks.
 - **Texto central:** `mm:ss`, peso medio, `textBright`, tamaño discreto — secundario respecto al dial, ubicado debajo del círculo (no superpuesto), igual que la referencia visual.
