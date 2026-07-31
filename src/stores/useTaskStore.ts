@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { storage } from '../services/storage'
+import { generateId } from '../utils/id'
 import type { Task } from '../types'
 
 // Máximo de tareas activas visibles en pantalla principal (Regla dura #6).
@@ -17,6 +18,7 @@ interface TaskStoreActions {
   removeTask: (id: string) => void
   reorderQueue: (orderedQueueIds: string[]) => void
   promoteToActive: (id: string) => void
+  moveTaskInQueue: (id: string, direction: 'up' | 'down') => void
 }
 
 export type TaskStore = TaskStoreState & TaskStoreActions
@@ -35,7 +37,7 @@ export const useTaskStore = create<TaskStore>()(
         if (!trimmed) return
         const { tasks } = get()
         const newTask: Task = {
-          id: crypto.randomUUID(),
+          id: generateId(),
           text: trimmed,
           completed: false,
           createdAt: Date.now(),
@@ -81,6 +83,22 @@ export const useTaskStore = create<TaskStore>()(
           const insertIndex = Math.min(MAX_ACTIVE_TASKS - 1, withoutTarget.length)
           withoutTarget.splice(insertIndex, 0, target)
           return { tasks: reindex(withoutTarget) }
+        })
+      },
+
+      moveTaskInQueue: (id, direction) => {
+        set((state) => {
+          const sorted = sortByOrder(state.tasks)
+          const active = sorted.slice(0, MAX_ACTIVE_TASKS)
+          const queue = sorted.slice(MAX_ACTIVE_TASKS)
+          const index = queue.findIndex((t) => t.id === id)
+          if (index === -1) return state
+
+          const swapWith = direction === 'up' ? index - 1 : index + 1
+          if (swapWith < 0 || swapWith >= queue.length) return state
+
+          ;[queue[index], queue[swapWith]] = [queue[swapWith], queue[index]]
+          return { tasks: reindex([...active, ...queue]) }
         })
       },
     }),

@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react'
 import { Modal, Platform, Pressable, StyleSheet, View } from 'react-native'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 import { Colors } from '../../constants/Colors'
 
@@ -41,7 +42,7 @@ export function Sheet({ visible, onClose, children }: SheetProps) {
       </Animated.View>
       <View style={styles.centerWrapper} pointerEvents="box-none">
         <Animated.View style={[styles.panel, isWeb ? styles.panelWeb : styles.panelNative, panelStyle]}>
-          {children}
+          <GestureHandlerRootView style={styles.gestureRoot}>{children}</GestureHandlerRootView>
         </Animated.View>
       </View>
     </Modal>
@@ -76,4 +77,5 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 32,
   },
+  gestureRoot: { width: '100%' },
 })
