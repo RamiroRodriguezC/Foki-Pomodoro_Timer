@@ -46,9 +46,9 @@ export function AudioPill() {
     if (isPlaying) {
       pausePlayback()
     } else {
-      playSelection()
+      playSelection(settings.soundSelection)
     }
-  }, [isPlayDisabled, isPlaying, pausePlayback, playSelection])
+  }, [isPlayDisabled, isPlaying, pausePlayback, playSelection, settings])
 
   return (
     <Animated.View style={[styles.pill, pillStyle]}>

@@ -120,7 +120,7 @@ export const useAppStore = create<AppStore>()(
           timer.phase === 'focus' // Solo auto-play en focus, nunca en break/longBreak
         ) {
           // Iniciar reproducción y hacer fade-in
-          useAudioStore.getState().playSelection().then(() => {
+          useAudioStore.getState().playSelection(settings.soundSelection).then(() => {
             AudioService.fadeTo(settings.volume, 1500)
           })
         }
@@ -243,7 +243,7 @@ export const useAppStore = create<AppStore>()(
               AudioService.fadeTo(settings.volume, 1500)
             } else {
               // No hay track cargado, cargar primero
-              audioState.playSelection().then(() => {
+              audioState.playSelection(settings.soundSelection).then(() => {
                 AudioService.fadeTo(settings.volume, 1500)
               })
             }

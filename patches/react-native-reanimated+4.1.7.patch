@@ -1,0 +1,39 @@
+diff --git a/node_modules/react-native-reanimated/lib/module/hook/useAnimatedStyle.js b/node_modules/react-native-reanimated/lib/module/hook/useAnimatedStyle.js
+index 1c246bf..74e3bff 100644
+--- a/node_modules/react-native-reanimated/lib/module/hook/useAnimatedStyle.js
++++ b/node_modules/react-native-reanimated/lib/module/hook/useAnimatedStyle.js
+@@ -389,7 +389,13 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
+       };
+     }
+     if (animatedUpdaterData.current) {
+-      animatedUpdaterData.current.styleUpdaterContainer.current = fun;
++      const styleUpdaterContainer = animatedUpdaterData.current.styleUpdaterContainer;
++      // Foki patch: RN's dev-only deepFreezeAndThrowOnMutationInDev freezes this
++      // container (reanimated bug #8295/#8454). Skip mutation when frozen so the
++      // dev build doesn't crash. No effect in release builds.
++      if (styleUpdaterContainer && !Object.isFrozen(styleUpdaterContainer)) {
++        styleUpdaterContainer.current = fun;
++      }
+     }
+     const mapperId = startMapper(fun, inputs);
+     return () => {
+diff --git a/node_modules/react-native-reanimated/src/hook/useAnimatedStyle.ts b/node_modules/react-native-reanimated/src/hook/useAnimatedStyle.ts
+index 877d8d9..8f8f28b 100644
+--- a/node_modules/react-native-reanimated/src/hook/useAnimatedStyle.ts
++++ b/node_modules/react-native-reanimated/src/hook/useAnimatedStyle.ts
+@@ -571,7 +571,14 @@ For more, see the docs: \`https://docs.swmansion.com/react-native-reanimated/doc
+       };
+     }
+     if (animatedUpdaterData.current) {
+-      animatedUpdaterData.current.styleUpdaterContainer.current = fun;
++      const styleUpdaterContainer =
++        animatedUpdaterData.current.styleUpdaterContainer;
++      // Foki patch: RN's dev-only deepFreezeAndThrowOnMutationInDev freezes this
++      // container (reanimated bug #8295/#8454). Skip mutation when frozen so the
++      // dev build doesn't crash. No effect in release builds.
++      if (styleUpdaterContainer && !Object.isFrozen(styleUpdaterContainer)) {
++        styleUpdaterContainer.current = fun;
++      }
+     }
+     const mapperId = startMapper(fun, inputs);
+     return () => {

@@ -76,7 +76,9 @@ export function AudioSheet() {
   const handleAmbientPress = useCallback(
     (trackId: string) => {
       selectAmbientTrack(trackId)
-      playSelection()
+      // Releer la selección recién actualizada (zustand set es síncrono) para
+      // reproducir el track recién elegido, no el capturado en el closure.
+      playSelection(useAppStore.getState().settings.soundSelection)
     },
     [playSelection, selectAmbientTrack]
   )
@@ -84,7 +86,7 @@ export function AudioSheet() {
   const handleGenrePress = useCallback(
     (genre: MusicGenre) => {
       selectMusicGenre(genre)
-      playSelection()
+      playSelection(useAppStore.getState().settings.soundSelection)
     },
     [playSelection, selectMusicGenre]
   )
@@ -171,7 +173,7 @@ export function AudioSheet() {
                     onPress={(e) => {
                       // No propagar el tap al padre (no cambiar de género)
                       e.stopPropagation()
-                      skipMusicTrack()
+                      skipMusicTrack(useAppStore.getState().settings.soundSelection)
                     }}
                     hitSlop={8}
                     accessibilityRole="button"

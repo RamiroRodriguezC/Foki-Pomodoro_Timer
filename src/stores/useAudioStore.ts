@@ -1,8 +1,7 @@
 import { create } from 'zustand'
 import { AudioService } from '../services/AudioService'
-import { useAppStore } from './useAppStore'
 import { getAmbientTrack, MUSIC_LIBRARY } from '../constants/SoundLibrary'
-import type { AppSettings } from '../types'
+import type { AppSettings, SoundSelection } from '../types'
 
 /**
  * Store efímero de reproducción de audio.
@@ -15,9 +14,9 @@ interface AudioStoreState {
 }
 
 interface AudioStoreActions {
-  playSelection: () => Promise<void> // resuelve la selección actual de useAppStore.settings.soundSelection y reproduce
+  playSelection: (soundSelection: SoundSelection) => Promise<void> // resuelve la selección pasada y reproduce
   pausePlayback: () => Promise<void>
-  skipMusicTrack: () => Promise<void> // solo tiene efecto real si category === 'music' y el género tiene >1 track
+  skipMusicTrack: (soundSelection: SoundSelection) => Promise<void> // solo tiene efecto real si category === 'music' y el género tiene >1 track
 }
 
 export type AudioStore = AudioStoreState & AudioStoreActions
@@ -27,11 +26,8 @@ export const useAudioStore = create<AudioStore>((set, get) => ({
   currentTrackId: null,
   currentMusicTrackIndex: 0,
 
-  playSelection: async () => {
-    const settings = useAppStore.getState().settings
-    const { soundSelection } = settings
-
-    // Defender el caso 'silence' aunque el botón debería estar disabled en UI
+  playSelection: async (soundSelection: SoundSelection) => {
+    // Defender el caso 'silence' aunque el botón esté disabled en UI
     if (soundSelection.category === 'silence') {
       await AudioService.stop()
       set({ isPlaying: false, currentTrackId: null })
@@ -89,10 +85,7 @@ export const useAudioStore = create<AudioStore>((set, get) => ({
     }
   },
 
-  skipMusicTrack: async () => {
-    const settings = useAppStore.getState().settings
-    const { soundSelection } = settings
-
+  skipMusicTrack: async (soundSelection: SoundSelection) => {
     // Solo tiene efecto si category === 'music'
     if (soundSelection.category !== 'music' || !soundSelection.musicGenre) {
       return
