@@ -17,14 +17,16 @@ export function TaskQueue() {
   const promoteToActive = useTaskStore((state) => state.promoteToActive)
   const moveTaskInQueue = useTaskStore((state) => state.moveTaskInQueue)
 
-  /* --- Native: Sortable con drag & drop (onDrop + allPositions) --- */
+  /* --- Native: Sortable con drag & drop (onDrop: id, posición final) --- */
   const handleDrop = useCallback(
-    (_id: string, _position: number, allPositions?: Record<string, number>) => {
-      if (!allPositions) return
-      const orderedIds = [...queuedTasks]
-        .sort((a, b) => (allPositions[a.id] ?? 0) - (allPositions[b.id] ?? 0))
-        .map((task) => task.id)
-      reorderQueue(orderedIds)
+    (id: string, position: number) => {
+      const ids = queuedTasks.map((task) => task.id)
+      const fromIndex = ids.indexOf(id)
+      if (fromIndex === -1) return
+      const next = [...ids]
+      const [moved] = next.splice(fromIndex, 1)
+      next.splice(position, 0, moved)
+      reorderQueue(next)
     },
     [queuedTasks, reorderQueue]
   )
