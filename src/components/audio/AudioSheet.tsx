@@ -2,17 +2,13 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import Slider from '@react-native-community/slider'
-import Animated, {
-  interpolateColor,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated'
 import { Colors } from '../../constants/Colors'
 import { AMBIENT_LIBRARY, getMusicGenres, MUSIC_LIBRARY } from '../../constants/SoundLibrary'
 import { useAppStore } from '../../stores/useAppStore'
 import { useAudioStore } from '../../stores/useAudioStore'
 import { AudioService } from '../../services/AudioService'
+import { InfoButton } from '../ui/InfoButton'
+import { Switch } from '../ui/Switch'
 import type { MusicGenre } from '../../types'
 import {
   AMBIENT_ICONS,
@@ -29,7 +25,6 @@ import {
 // interno maneja cualquier cantidad de tracks — nunca depende de .length.
 const LIST_MAX_HEIGHT = 118
 const FADE_HEIGHT = 18
-const TOGGLE_ANIMATION_MS = 200
 
 type Tab = 'ambient' | 'music'
 
@@ -65,6 +60,7 @@ export function AudioSheet() {
   const genres = getMusicGenres()
   const activeGenre =
     soundSelection.category === 'music' ? soundSelection.musicGenre : null
+  const isSilenceActive = soundSelection.category === 'silence'
 
   const handleSilencePress = useCallback(() => {
     selectSilence()
@@ -106,26 +102,38 @@ export function AudioSheet() {
         style={styles.list}
         onContentSizeChange={(_w, h) => setAmbientOverflow(h > LIST_MAX_HEIGHT)}
       >
-        {AMBIENT_LIBRARY.map((track) => (
-          <Pressable
-            key={track.id}
-            style={styles.trackRow}
-            onPress={() => handleAmbientPress(track.id)}
-            accessibilityRole="button"
-          >
-            <AudioIcon
-              spec={AMBIENT_ICONS[track.id] ?? { set: 'feather', name: 'headphones' }}
-              size={16}
-              color={Colors.textPrimary}
-            />
-            <View style={styles.trackNameRow}>
-              <Text style={styles.trackName}>{track.name}</Text>
-              {track.subtitle ? (
-                <Text style={styles.trackSubtitle}>{track.subtitle}</Text>
+        {AMBIENT_LIBRARY.map((track) => {
+          const isActive =
+            soundSelection.category === 'ambient' &&
+            soundSelection.ambientTrackId === track.id
+          return (
+            <Pressable
+              key={track.id}
+              style={styles.ambientRow}
+              onPress={() => handleAmbientPress(track.id)}
+              accessibilityRole="button"
+            >
+              <View style={styles.ambientMainRow}>
+                <AudioIcon
+                  spec={AMBIENT_ICONS[track.id] ?? { set: 'feather', name: 'headphones' }}
+                  size={16}
+                  color={isActive ? Colors.accentGreen : Colors.textPrimary}
+                />
+                <View style={styles.trackNameRow}>
+                  <Text style={[styles.trackName, isActive && styles.trackNameActive]}>
+                    {track.name}
+                  </Text>
+                  {track.subtitle ? (
+                    <Text style={styles.trackSubtitle}>{track.subtitle}</Text>
+                  ) : null}
+                </View>
+              </View>
+              {track.author ? (
+                <Text style={styles.authorLine}>By {track.author}</Text>
               ) : null}
-            </View>
-          </Pressable>
-        ))}
+            </Pressable>
+          )
+        })}
       </ScrollView>
       {ambientOverflow && (
         <LinearGradient
@@ -213,8 +221,14 @@ export function AudioSheet() {
         accessibilityLabel="Silencio"
       >
         <View style={styles.silenceLeft}>
-          <AudioIcon spec={ICON_SILENCE} size={16} color={Colors.textPrimary} />
-          <Text style={styles.silenceText}>Silencio</Text>
+          <AudioIcon
+            spec={ICON_SILENCE}
+            size={16}
+            color={isSilenceActive ? Colors.accentGreen : Colors.textPrimary}
+          />
+          <Text style={[styles.silenceText, isSilenceActive && styles.silenceTextActive]}>
+            Silencio
+          </Text>
         </View>
         <AudioIcon spec={ICON_CHEVRON_RIGHT} size={14} color={Colors.textMuted} />
       </Pressable>
@@ -262,46 +276,20 @@ export function AudioSheet() {
           />
         </View>
         <View style={styles.syncRow}>
-          <Text style={styles.syncText}>Reproducción inteligente</Text>
-          <SyncToggle
+          <View style={styles.syncLabelRow}>
+            <Text style={styles.syncText}>Reproducción inteligente</Text>
+            <InfoButton
+              text="Reproduce automáticamente el sonido seleccionado durante la fase de concentración y lo pausa durante los intervalos. (¡Tu cerebro también necesita silencio!)"
+            />
+          </View>
+          <Switch
             value={settings.autoSyncEnabled}
             onChange={setAutoSyncEnabled}
+            accessibilityLabel="Reproducción inteligente"
           />
         </View>
       </View>
     </View>
-  )
-}
-
-/**
- * Toggle custom (34x19, knob en Colors.background) — el Switch nativo varía de
- * estilo entre plataformas; este se ve igual en web/iOS/Android.
- */
-function SyncToggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
-  const progress = useSharedValue(value ? 1 : 0)
-
-  useEffect(() => {
-    progress.value = withTiming(value ? 1 : 0, { duration: TOGGLE_ANIMATION_MS })
-  }, [value, progress])
-
-  const trackStyle = useAnimatedStyle(() => ({
-    backgroundColor: interpolateColor(progress.value, [0, 1], [Colors.border, Colors.accentGreen]),
-  }))
-
-  // 34 - 2*padding(2) - 15 (knob) = 15px de recorrido
-  const knobStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: progress.value * 15 }],
-  }))
-
-  return (
-    <Pressable
-      style={[styles.toggle, trackStyle]}
-      onPress={() => onChange(!value)}
-      accessibilityRole="switch"
-      accessibilityState={{ checked: value }}
-    >
-      <Animated.View style={[styles.toggleKnob, knobStyle]} />
-    </Pressable>
   )
 }
 
@@ -325,6 +313,10 @@ const styles = StyleSheet.create({
   silenceText: {
     fontSize: 14,
     color: Colors.textPrimary,
+  },
+  silenceTextActive: {
+    color: Colors.accentGreen,
+    fontWeight: '500',
   },
 
   /* --- Segmented control --- */
@@ -374,6 +366,15 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     paddingHorizontal: 4,
   },
+  ambientRow: {
+    paddingVertical: 7,
+    paddingHorizontal: 4,
+  },
+  ambientMainRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
   trackNameRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -382,6 +383,10 @@ const styles = StyleSheet.create({
   trackName: {
     fontSize: 13.5,
     color: Colors.textPrimary,
+  },
+  trackNameActive: {
+    color: Colors.accentGreen,
+    fontWeight: '500',
   },
   trackSubtitle: {
     fontSize: 11,
@@ -422,6 +427,12 @@ const styles = StyleSheet.create({
     marginLeft: 26, // alinea con el texto, no con el ícono
     marginTop: 2,
   },
+  authorLine: {
+    fontSize: 11.5,
+    color: Colors.textSecondary,
+    marginLeft: 26, // alinea con el texto, no con el ícono
+    marginTop: 2,
+  },
 
   /* --- Footer --- */
   footer: {
@@ -444,20 +455,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  syncLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
   syncText: {
     fontSize: 13,
     color: Colors.textPrimary,
-  },
-  toggle: {
-    width: 34,
-    height: 19,
-    borderRadius: 10,
-    padding: 2,
-  },
-  toggleKnob: {
-    width: 15,
-    height: 15,
-    borderRadius: 7.5,
-    backgroundColor: Colors.background,
   },
 })

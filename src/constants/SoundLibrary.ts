@@ -3,7 +3,8 @@ import type { MusicGenre } from '../types'
 export interface Track {
   id: string
   name: string
-  subtitle?: string   // ej. "285 Hz" bajo "Ruido rosa"
+  subtitle?: string    // ej. "285 Hz" bajo "Ruido rosa"
+  author?: string      // ej. "Noise Foundation" — se muestra como "By {author}"
   file: number         // resultado de require()
 }
 
@@ -20,6 +21,7 @@ export const AMBIENT_LIBRARY: Track[] = [
     id: 'pinkNoise',
     name: 'Ruido rosa',
     subtitle: '285 Hz',
+    author: 'Noise Foundation',
     // eslint-disable-next-line @typescript-eslint/no-require-imports -- assets estáticos de Expo se importan con require()
     file: require('../../assets/Sounds/SoundBarrier/PinkNoise.mp3'),
   },
