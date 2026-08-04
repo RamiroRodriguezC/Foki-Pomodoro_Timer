@@ -158,46 +158,45 @@ export function AudioSheet() {
             tracks.find((t) => t.id === currentTrackId) ?? tracks[0]
 
           return (
-            <Pressable
-              key={genre}
-              style={styles.trackRow}
-              onPress={() => handleGenrePress(genre)}
-              accessibilityRole="button"
-            >
-              <View style={styles.genreLine}>
-                <View style={styles.genreLeft}>
-                  <AudioIcon
-                    spec={GENRE_ICONS[genre] ?? { set: 'feather', name: 'music' }}
-                    size={16}
-                    color={isActive ? Colors.accentGreen : Colors.textPrimary}
-                  />
-                  <Text style={[styles.genreName, isActive && styles.genreNameActive]}>
-                    {GENRE_LABELS[genre] ?? genre}
-                  </Text>
+            <View key={genre} style={styles.trackRow}>
+              <Pressable
+                style={styles.genreMain}
+                onPress={() => handleGenrePress(genre)}
+                accessibilityRole="button"
+              >
+                <View style={styles.genreLine}>
+                  <View style={styles.genreLeft}>
+                    <AudioIcon
+                      spec={GENRE_ICONS[genre] ?? { set: 'feather', name: 'music' }}
+                      size={16}
+                      color={isActive ? Colors.accentGreen : Colors.textPrimary}
+                    />
+                    <Text style={[styles.genreName, isActive && styles.genreNameActive]}>
+                      {GENRE_LABELS[genre] ?? genre}
+                    </Text>
+                  </View>
                 </View>
-                {isActive && (
-                  <Pressable
-                    style={styles.skipBtn}
-                    onPress={(e) => {
-                      // No propagar el tap al padre (no cambiar de género)
-                      e.stopPropagation()
-                      skipMusicTrack(useAppStore.getState().settings.soundSelection)
-                    }}
-                    hitSlop={8}
-                    accessibilityRole="button"
-                    accessibilityLabel="Saltar pista"
-                  >
-                    <AudioIcon spec={ICON_SKIP} size={14} color={Colors.accentCyan} />
-                    <Text style={styles.skipText}>Saltar</Text>
-                  </Pressable>
-                )}
-              </View>
-              {isActive && activeTrack ? (
-                <Text style={styles.trackSub} numberOfLines={1}>
-                  {activeTrack.name}
-                </Text>
-              ) : null}
-            </Pressable>
+                {isActive && activeTrack ? (
+                  <Text style={styles.trackSub} numberOfLines={1}>
+                    {activeTrack.name}
+                  </Text>
+                ) : null}
+              </Pressable>
+              {isActive && (
+                <Pressable
+                  style={styles.skipBtn}
+                  onPress={() =>
+                    skipMusicTrack(useAppStore.getState().settings.soundSelection)
+                  }
+                  hitSlop={8}
+                  accessibilityRole="button"
+                  accessibilityLabel="Saltar pista"
+                >
+                  <AudioIcon spec={ICON_SKIP} size={14} color={Colors.accentCyan} />
+                  <Text style={styles.skipText}>Saltar</Text>
+                </Pressable>
+              )}
+            </View>
           )
         })}
       </ScrollView>
@@ -363,6 +362,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
+  },
+  genreMain: {
+    flex: 1,
     paddingVertical: 7,
     paddingHorizontal: 4,
   },
@@ -394,9 +396,7 @@ const styles = StyleSheet.create({
   },
   genreLine: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    flex: 1,
   },
   genreLeft: {
     flexDirection: 'row',

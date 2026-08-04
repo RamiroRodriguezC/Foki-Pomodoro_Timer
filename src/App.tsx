@@ -9,6 +9,7 @@ import { TaskInput } from './components/tasks/TaskInput'
 import { QueueButton } from './components/tasks/QueueButton'
 import { TaskQueue } from './components/tasks/TaskQueue'
 import { Topbar } from './components/layout/Topbar'
+import { MeshBackground } from './components/layout/MeshBackground'
 import { AudioSheet } from './components/audio/AudioSheet'
 import { Sheet } from './components/layout/Sheet'
 import { useAppStore } from './stores/useAppStore'
@@ -22,6 +23,7 @@ export default function App() {
     <GestureHandlerRootView style={styles.flex}>
       <SafeAreaProvider>
         <View style={styles.container}>
+          <MeshBackground />
           <Topbar />
           <Timer />
           <TaskList />
