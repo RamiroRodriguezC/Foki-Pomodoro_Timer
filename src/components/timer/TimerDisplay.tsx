@@ -12,9 +12,10 @@ export function TimerDisplay({ label }: TimerDisplayProps) {
 
 const styles = StyleSheet.create({
   timeText: {
-    marginTop: 20,
-    fontSize: 32,
-    fontWeight: '500',
-    color: Colors.textBright,
+    marginTop: 6,
+    fontSize: 12,
+    fontWeight: '400',
+    letterSpacing: 3,
+    color: Colors.textSecondary,
   },
 })

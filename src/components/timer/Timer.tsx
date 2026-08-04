@@ -61,12 +61,12 @@ export function Timer() {
       <Pressable onPress={handleTogglePress}>
         <Clock progress={progress} phase={timer.phase} />
       </Pressable>
-      <TimerDisplay label={formatMMSS(remainingSeconds)} />
       <PomodoroLabel
         phase={timer.phase}
         isIdle={timer.status === 'idle'}
         onPress={cyclePhase}
       />
+      <TimerDisplay label={formatMMSS(remainingSeconds)} />
       <ResetButton />
     </View>
   )

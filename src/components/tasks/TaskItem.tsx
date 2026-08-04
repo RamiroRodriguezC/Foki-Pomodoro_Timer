@@ -90,8 +90,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
   },
   checkboxChecked: {
-    backgroundColor: Colors.accentGreen,
-    borderColor: Colors.accentGreen,
+    backgroundColor: Colors.accentOne,
+    borderColor: Colors.accentOne,
   },
   textPrimary: {
     fontSize: 17,

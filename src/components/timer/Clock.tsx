@@ -34,12 +34,12 @@ const PHASE_ACCENTS: Record<TimerPhase, PhaseAccent> = {
     gradientEndColor: Colors.gradientEnd,
   },
   break: {
-    ringColor: Colors.accentGreen,
-    gradientEndColor: Colors.accentGreen,
+    ringColor: Colors.accentOne,
+    gradientEndColor: Colors.accentOne,
   },
   longBreak: {
-    ringColor: Colors.accentCyan,
-    gradientEndColor: Colors.accentCyan,
+    ringColor: Colors.accentTwo,
+    gradientEndColor: Colors.accentTwo,
   },
 }
 

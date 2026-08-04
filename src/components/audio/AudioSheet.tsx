@@ -117,7 +117,7 @@ export function AudioSheet() {
                 <AudioIcon
                   spec={AMBIENT_ICONS[track.id] ?? { set: 'feather', name: 'headphones' }}
                   size={16}
-                  color={isActive ? Colors.accentGreen : Colors.textPrimary}
+                  color={isActive ? Colors.accentOne : Colors.textPrimary}
                 />
                 <View style={styles.trackNameRow}>
                   <Text style={[styles.trackName, isActive && styles.trackNameActive]}>
@@ -169,7 +169,7 @@ export function AudioSheet() {
                     <AudioIcon
                       spec={GENRE_ICONS[genre] ?? { set: 'feather', name: 'music' }}
                       size={16}
-                      color={isActive ? Colors.accentGreen : Colors.textPrimary}
+                      color={isActive ? Colors.accentOne : Colors.textPrimary}
                     />
                     <Text style={[styles.genreName, isActive && styles.genreNameActive]}>
                       {GENRE_LABELS[genre] ?? genre}
@@ -192,7 +192,7 @@ export function AudioSheet() {
                   accessibilityRole="button"
                   accessibilityLabel="Saltar pista"
                 >
-                  <AudioIcon spec={ICON_SKIP} size={14} color={Colors.accentCyan} />
+                  <AudioIcon spec={ICON_SKIP} size={14} color={Colors.accentTwo} />
                   <Text style={styles.skipText}>Saltar</Text>
                 </Pressable>
               )}
@@ -223,7 +223,7 @@ export function AudioSheet() {
           <AudioIcon
             spec={ICON_SILENCE}
             size={16}
-            color={isSilenceActive ? Colors.accentGreen : Colors.textPrimary}
+            color={isSilenceActive ? Colors.accentOne : Colors.textPrimary}
           />
           <Text style={[styles.silenceText, isSilenceActive && styles.silenceTextActive]}>
             Silencio
@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
   },
   silenceTextActive: {
-    color: Colors.accentGreen,
+    color: Colors.accentOne,
     fontWeight: '500',
   },
 
@@ -387,7 +387,7 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
   },
   trackNameActive: {
-    color: Colors.accentGreen,
+    color: Colors.accentOne,
     fontWeight: '500',
   },
   trackSubtitle: {
@@ -408,7 +408,7 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
   },
   genreNameActive: {
-    color: Colors.accentGreen,
+    color: Colors.accentOne,
     fontWeight: '500',
   },
   skipBtn: {
@@ -419,7 +419,7 @@ const styles = StyleSheet.create({
   },
   skipText: {
     fontSize: 12,
-    color: Colors.accentCyan,
+    color: Colors.accentTwo,
   },
   trackSub: {
     fontSize: 11.5,

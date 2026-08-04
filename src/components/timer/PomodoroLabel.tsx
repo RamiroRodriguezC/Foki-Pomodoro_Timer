@@ -32,7 +32,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   phaseLabel: {
-    marginTop: 4,
+    marginTop: 16,
     fontSize: 12,
     fontWeight: '600',
     letterSpacing: 3,

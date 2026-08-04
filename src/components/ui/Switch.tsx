@@ -47,7 +47,7 @@ export function Switch({
     backgroundColor: interpolateColor(
       progress.value,
       [0, 1],
-      [Colors.backgroundElevated, Colors.accentGreen]
+      [Colors.backgroundElevated, Colors.accentOne]
     ),
   }))
 

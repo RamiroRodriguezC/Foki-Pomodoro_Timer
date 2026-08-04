@@ -8,8 +8,8 @@ export const Colors = {
   gradientMid: '#B25CFF',
   gradientEnd: '#FF5CC8',
 
-  accentCyan: '#4FE0FF',
-  accentGreen: '#4CFFB0',
+  accentOne: '#e08cfa',
+  accentTwo: '#c88cfa',
 
   textBright: '#FFFFFF',
   textPrimary: '#E8E6F5',
