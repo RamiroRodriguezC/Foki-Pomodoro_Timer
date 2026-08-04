@@ -11,6 +11,7 @@ import Animated, {
 import * as Haptics from 'expo-haptics'
 import { Colors } from '../../constants/Colors'
 import { useTaskStore } from '../../stores/useTaskStore'
+import { useFocusFade } from '../layout/useFocusFade'
 import type { Task } from '../../types'
 
 interface TaskItemProps {
@@ -27,6 +28,10 @@ const STRIKE_ANIMATION_DURATION = 200
 export function TaskItem({ task, isPrimary }: TaskItemProps) {
   const toggleTask = useTaskStore((state) => state.toggleTask)
   const removeTask = useTaskStore((state) => state.removeTask)
+
+  // En Focus Mode solo la tarea #1 (primaria) queda visible; las #2/#3
+  // desaparecen y no responden a toques.
+  const fade = useFocusFade(0)
 
   const strikeProgress = useSharedValue(task.completed ? 1 : 0)
 
@@ -51,9 +56,10 @@ export function TaskItem({ task, isPrimary }: TaskItemProps) {
 
   return (
     <Animated.View
-      style={styles.wrapper}
+      style={[styles.wrapper, !isPrimary && fade.style]}
       exiting={FadeOut.duration(300)}
       layout={LinearTransition.springify()}
+      pointerEvents={!isPrimary && fade.isFocusMode ? 'none' : 'auto'}
     >
       <Pressable onPress={handlePress} style={styles.pressable} hitSlop={8}>
         <View style={[styles.checkbox, task.completed && styles.checkboxChecked]} />

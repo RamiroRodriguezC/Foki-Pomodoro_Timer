@@ -34,7 +34,6 @@ export function TaskInput() {
 const styles = StyleSheet.create({
   wrapper: {
     width: '100%',
-    maxWidth: 320,
     marginTop: 16,
   },
   input: {

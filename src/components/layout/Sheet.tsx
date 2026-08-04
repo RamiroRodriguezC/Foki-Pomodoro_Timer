@@ -8,12 +8,17 @@ interface SheetProps {
   visible: boolean
   onClose: () => void
   children: React.ReactNode
+  /** 'bottom': popover/web o bottom sheet/nativo (default). 'left': drawer lateral desde la izquierda. */
+  placement?: 'bottom' | 'left'
 }
 
 const ANIMATION_DURATION = 250
+// Desplazamiento del drawer al salir: cubre un panel de ~min(90%, 400) + margen.
+const DRAWER_OFFSET = 420
 const isWeb = Platform.OS === 'web'
 
-export function Sheet({ visible, onClose, children }: SheetProps) {
+export function Sheet({ visible, onClose, children, placement = 'bottom' }: SheetProps) {
+  const isLeft = placement === 'left'
   const progress = useSharedValue(visible ? 1 : 0)
 
   useEffect(() => {
@@ -23,6 +28,12 @@ export function Sheet({ visible, onClose, children }: SheetProps) {
   const backdropStyle = useAnimatedStyle(() => ({ opacity: progress.value }))
 
   const panelStyle = useAnimatedStyle(() => {
+    if (isLeft) {
+      return {
+        opacity: progress.value,
+        transform: [{ translateX: (1 - progress.value) * -DRAWER_OFFSET }],
+      }
+    }
     if (isWeb) {
       return {
         opacity: progress.value,
@@ -44,8 +55,17 @@ export function Sheet({ visible, onClose, children }: SheetProps) {
         <Animated.View style={[styles.backdrop, backdropStyle]}>
           <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
         </Animated.View>
-        <View style={styles.centerWrapper} pointerEvents="box-none">
-          <Animated.View style={[styles.panel, isWeb ? styles.panelWeb : styles.panelNative, panelStyle]}>
+        <View
+          style={[styles.centerWrapper, isLeft ? styles.centerWrapperLeft : styles.centerWrapperBottom]}
+          pointerEvents="box-none"
+        >
+          <Animated.View
+            style={[
+              styles.panel,
+              isLeft ? styles.panelDrawer : isWeb ? styles.panelWeb : styles.panelNative,
+              panelStyle,
+            ]}
+          >
             {children}
           </Animated.View>
         </View>
@@ -61,8 +81,15 @@ const styles = StyleSheet.create({
   },
   centerWrapper: {
     ...StyleSheet.absoluteFillObject,
+  },
+  centerWrapperBottom: {
     justifyContent: isWeb ? 'center' : 'flex-end',
     alignItems: isWeb ? 'center' : 'stretch',
+  },
+  // Drawer lateral: anclado a la izquierda, altura completa — igual en web y nativo.
+  centerWrapperLeft: {
+    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
   },
   panel: {
     backgroundColor: Colors.surface,
@@ -79,6 +106,16 @@ const styles = StyleSheet.create({
     width: '100%',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
+    padding: 20,
+    paddingBottom: 32,
+  },
+  panelDrawer: {
+    width: '90%',
+    maxWidth: 400,
+    height: '100%',
+    borderBottomRightRadius: 20,
+    borderTopRightRadius: 20,
+    borderLeftWidth: 0,
     padding: 20,
     paddingBottom: 32,
   },

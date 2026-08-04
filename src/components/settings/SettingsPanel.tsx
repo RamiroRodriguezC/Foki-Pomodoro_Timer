@@ -4,6 +4,8 @@ import { Colors } from '../../constants/Colors'
 import { useAppStore } from '../../stores/useAppStore'
 import { DEFAULT_SETTINGS } from '../../types'
 import { NumberStepper } from './NumberStepper'
+import { Switch } from '../ui/Switch'
+import { InfoButton } from '../ui/InfoButton'
 
 const MIN_MINUTES = 1
 const MAX_MINUTES = 120
@@ -12,8 +14,10 @@ const MAX_SESSIONS = 12
 
 export function SettingsPanel() {
   const config = useAppStore((state) => state.settings.config)
+  const focusModeEnabled = useAppStore((state) => state.settings.focusModeEnabled)
   const status = useAppStore((state) => state.timer.status)
   const updateSessionConfig = useAppStore((state) => state.updateSessionConfig)
+  const setFocusModeEnabled = useAppStore((state) => state.setFocusModeEnabled)
 
   const disabled = status !== 'idle'
 
@@ -62,6 +66,20 @@ export function SettingsPanel() {
         disabled={disabled}
       />
 
+      {/* Focus Mode: mismo patrón (Switch + InfoButton) que "Reproducción
+          inteligente" en AudioSheet — el switch nunca se deshabilita. */}
+      <View style={styles.focusModeRow}>
+        <View style={styles.focusModeLabelRow}>
+          <Text style={styles.focusModeText}>Focus Mode</Text>
+          <InfoButton text="Durante una sesión de concentración, todo se atenúa y desaparece excepto el reloj y tu tarea principal: nada que distraiga, solo foco." />
+        </View>
+        <Switch
+          value={focusModeEnabled}
+          onChange={setFocusModeEnabled}
+          accessibilityLabel="Focus Mode"
+        />
+      </View>
+
       <Pressable
         onPress={handleRestoreDefaults}
         disabled={disabled}
@@ -87,6 +105,25 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Colors.textBright,
     marginBottom: 16,
+  },
+  focusModeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 20,
+    paddingTop: 14,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+  },
+  focusModeLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    flexShrink: 1,
+  },
+  focusModeText: {
+    fontSize: 13,
+    color: Colors.textPrimary,
   },
   restoreBtn: {
     marginTop: 4,

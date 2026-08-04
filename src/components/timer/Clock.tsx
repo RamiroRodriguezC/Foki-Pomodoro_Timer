@@ -5,6 +5,7 @@ import Svg, {
   Defs,
   LinearGradient,
   Path,
+  RadialGradient,
   Stop,
 } from 'react-native-svg'
 import Animated, {
@@ -13,6 +14,8 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated'
 import { Colors } from '../../constants/Colors'
+import { selectIsFocusMode, useAppStore } from '../../stores/useAppStore'
+import { FOCUS_FADE_DURATION } from '../layout/useFocusFade'
 import type { TimerPhase } from '../../types'
 
 interface ClockProps {
@@ -46,7 +49,15 @@ const PHASE_ACCENTS: Record<TimerPhase, PhaseAccent> = {
 const RING_STROKE_WIDTH = 4
 const ANIMATION_DURATION = 950
 
+// Extensión del halo de Focus Mode más allá del anillo del dial. El canvas
+// SVG crece HALO_EXTENT*2 para que el halo no quede recortado por el viewport.
+const HALO_EXTENT = 16
+// Pico de opacidad del halo dentro del gradiente radial — "no demasiado
+// luminoso" (AGENTS 4.5).
+const HALO_PEAK_OPACITY = 0.35
+
 const AnimatedPath = Animated.createAnimatedComponent(Path)
+const AnimatedCircle = Animated.createAnimatedComponent(Circle)
 
 /**
  * Calcula el path SVG de un wedge (porción de pie) sólido que arranca en la
@@ -114,11 +125,25 @@ export function Clock({ progress, phase, size = 260 }: ClockProps) {
     })
   }, [clampedProgress, animatedAngle])
 
+  // Halo de Focus Mode: visible únicamente mientras corre una sesión de focus.
+  const isFocusMode = useAppStore(selectIsFocusMode)
+  const haloOpacity = useSharedValue(isFocusMode ? 1 : 0)
+
+  useEffect(() => {
+    haloOpacity.value = withTiming(isFocusMode ? 1 : 0, {
+      duration: FOCUS_FADE_DURATION,
+    })
+  }, [isFocusMode, haloOpacity])
+
+  const haloProps = useAnimatedProps(() => ({ opacity: haloOpacity.value }))
+
   const accent = PHASE_ACCENTS[phase]
 
-  const center = size / 2
+  const svgSize = size + HALO_EXTENT * 2
+  const center = svgSize / 2
   const baseRadius = size / 2 - RING_STROKE_WIDTH / 2
   const wedgeRadius = size / 2 - RING_STROKE_WIDTH
+  const haloRadius = size / 2 + HALO_EXTENT
 
   const animatedProps = useAnimatedProps(() => {
     return {
@@ -130,14 +155,33 @@ export function Clock({ progress, phase, size = 260 }: ClockProps) {
 
   return (
     <View style={styles.wrapper}>
-      <Svg width={size} height={size}>
+      <Svg width={svgSize} height={svgSize}>
         <Defs>
           <LinearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
             <Stop offset="0%" stopColor={Colors.gradientStart} />
             <Stop offset="50%" stopColor={Colors.gradientMid} />
             <Stop offset="100%" stopColor={accent.gradientEndColor} />
           </LinearGradient>
+
+          {/* Halo de Focus Mode: anillo radial morado en el borde del dial.
+              El gradiente codifica la forma (transparente → pico → transparente);
+              la opacidad del círculo anima 0↔1 con el fade de focus mode. */}
+          <RadialGradient id="clock-halo" cx="50%" cy="50%" r="50%">
+            <Stop offset="0%" stopColor={Colors.gradientStart} stopOpacity={0} />
+            <Stop offset="70%" stopColor={Colors.gradientStart} stopOpacity={0} />
+            <Stop offset="88%" stopColor={Colors.gradientStart} stopOpacity={HALO_PEAK_OPACITY} />
+            <Stop offset="100%" stopColor={Colors.gradientStart} stopOpacity={0} />
+          </RadialGradient>
         </Defs>
+
+        {/* Halo (solo focus mode) — detrás del disco base */}
+        <AnimatedCircle
+          animatedProps={haloProps}
+          cx={center}
+          cy={center}
+          r={haloRadius}
+          fill="url(#clock-halo)"
+        />
 
         {/* Disco base: fondo del reloj (tiempo ya consumido) */}
         <Circle

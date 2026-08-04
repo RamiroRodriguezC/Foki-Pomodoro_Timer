@@ -16,9 +16,8 @@ interface TaskStoreActions {
   addTask: (text: string) => void
   toggleTask: (id: string) => void
   removeTask: (id: string) => void
-  reorderQueue: (orderedQueueIds: string[]) => void
-  promoteToActive: (id: string) => void
-  moveTaskInQueue: (id: string, direction: 'up' | 'down') => void
+  reorderTasks: (orderedIds: string[]) => void
+  moveTask: (id: string, direction: 'up' | 'down') => void
 }
 
 export type TaskStore = TaskStoreState & TaskStoreActions
@@ -60,45 +59,30 @@ export const useTaskStore = create<TaskStore>()(
         }))
       },
 
-      reorderQueue: (orderedQueueIds) => {
+      // Reordena la lista COMPLETA (activas + resto). Quién entra a la pantalla
+      // principal (máx. 3) y quién es la "tarea actual" se deriva del orden
+      // resultante en los selectores — nunca acá (Regla #8).
+      reorderTasks: (orderedIds) => {
         set((state) => {
-          const active = selectActiveTasks(state)
-          const activeIds = new Set(active.map((task) => task.id))
           const tasksById = new Map(state.tasks.map((task) => [task.id, task]))
-
-          const reorderedQueue = orderedQueueIds
+          const reordered = orderedIds
             .map((id) => tasksById.get(id))
-            .filter((task): task is Task => task !== undefined && !activeIds.has(task.id))
-
-          return { tasks: reindex([...active, ...reorderedQueue]) }
+            .filter((task): task is Task => task !== undefined)
+          return { tasks: reindex(reordered) }
         })
       },
 
-      promoteToActive: (id) => {
+      moveTask: (id, direction) => {
         set((state) => {
           const sorted = sortByOrder(state.tasks)
-          const target = sorted.find((task) => task.id === id)
-          if (!target) return state
-          const withoutTarget = sorted.filter((task) => task.id !== id)
-          const insertIndex = Math.min(MAX_ACTIVE_TASKS - 1, withoutTarget.length)
-          withoutTarget.splice(insertIndex, 0, target)
-          return { tasks: reindex(withoutTarget) }
-        })
-      },
-
-      moveTaskInQueue: (id, direction) => {
-        set((state) => {
-          const sorted = sortByOrder(state.tasks)
-          const active = sorted.slice(0, MAX_ACTIVE_TASKS)
-          const queue = sorted.slice(MAX_ACTIVE_TASKS)
-          const index = queue.findIndex((t) => t.id === id)
+          const index = sorted.findIndex((t) => t.id === id)
           if (index === -1) return state
 
           const swapWith = direction === 'up' ? index - 1 : index + 1
-          if (swapWith < 0 || swapWith >= queue.length) return state
+          if (swapWith < 0 || swapWith >= sorted.length) return state
 
-          ;[queue[index], queue[swapWith]] = [queue[swapWith], queue[index]]
-          return { tasks: reindex([...active, ...queue]) }
+          ;[sorted[index], sorted[swapWith]] = [sorted[swapWith], sorted[index]]
+          return { tasks: reindex(sorted) }
         })
       },
     }),
@@ -109,9 +93,11 @@ export const useTaskStore = create<TaskStore>()(
   )
 )
 
-// Selectores derivados — única fuente de verdad para "máx. 3 activas, resto a cola" (Regla dura #8).
+// Selectores derivados — única fuente de verdad para "máx. 3 activas" y "tarea actual" (Regla dura #8).
 export const selectActiveTasks = (state: TaskStoreState): Task[] =>
   sortByOrder(state.tasks).slice(0, MAX_ACTIVE_TASKS)
 
-export const selectQueuedTasks = (state: TaskStoreState): Task[] =>
-  sortByOrder(state.tasks).slice(MAX_ACTIVE_TASKS)
+export const selectAllTasks = (state: TaskStoreState): Task[] => sortByOrder(state.tasks)
+
+export const selectCurrentTask = (state: TaskStoreState): Task | undefined =>
+  sortByOrder(state.tasks)[0]

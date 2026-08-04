@@ -62,7 +62,7 @@ export const GONG_START = require('../../assets/Sounds/Gongs/startGong.mp3')
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- assets estáticos de Expo se importan con require()
 export const GONG_FINISH = require('../../assets/Sounds/Gongs/finishGong.mp3')
 
-// Helpers de selector — mismo criterio que selectActiveTasks/selectQueuedTasks
+// Helpers de selector — mismo criterio que selectActiveTasks/selectAllTasks
 // en useTaskStore: la lógica de "qué tracks tiene una categoría" vive acá,
 // nunca se recalcula en un componente.
 export const getMusicGenres = (): MusicGenre[] =>

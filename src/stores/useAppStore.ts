@@ -42,6 +42,7 @@ interface AppStoreActions {
   selectSilence: () => void
   setVolume: (volume: number) => void
   setAutoSyncEnabled: (enabled: boolean) => void
+  setFocusModeEnabled: (enabled: boolean) => void
   setBinauralEnabled: (enabled: boolean) => void
   // Paneles (máx. 2 niveles: pantalla principal → panel — Regla dura #4)
   openPanel: (panel: Exclude<PanelId, null>) => void
@@ -59,6 +60,7 @@ interface PersistedStateV1 {
     binauralEnabled?: boolean
     volume?: number
     autoSyncEnabled?: boolean
+    focusModeEnabled?: boolean
     soundSelection?: SoundSelection
   }
   timer?: Partial<TimerState> & { isRunning?: boolean }
@@ -66,7 +68,7 @@ interface PersistedStateV1 {
 }
 
 export const selectIsFocusMode = (state: AppStore) =>
-  state.timer.phase === 'focus' && state.timer.status === 'running'
+  state.settings.focusModeEnabled && state.timer.phase === 'focus' && state.timer.status === 'running'
 
 const initialTimer: TimerState = {
   phase: 'focus',
@@ -348,6 +350,10 @@ export const useAppStore = create<AppStore>()(
         set((state) => ({ settings: { ...state.settings, autoSyncEnabled: enabled } }))
       },
 
+      setFocusModeEnabled: (focusModeEnabled) => {
+        set((state) => ({ settings: { ...state.settings, focusModeEnabled } }))
+      },
+
       setBinauralEnabled: (binauralEnabled) => {
         set((state) => ({ settings: { ...state.settings, binauralEnabled } }))
       },
@@ -358,7 +364,7 @@ export const useAppStore = create<AppStore>()(
     {
       name: 'foki-app-storage',
       storage: createJSONStorage(() => storage),
-      version: 2,
+      version: 3,
       // Shape viejo persistido (versiones 0 y 1): shape v1 (soundBarrier) y v0 (timer sin status).
       // El resto de campos se valida contra los defaults al leer.
       migrate: (persistedState: unknown, version: number) => {
@@ -448,6 +454,11 @@ export const useAppStore = create<AppStore>()(
             settings.autoSyncEnabled = true
           }
           // binauralEnabled ya existía, no tocarlo
+        }
+
+        // Migración de version < 3: agregar el setting de Focus Mode (default ON)
+        if (version < 3 && persisted.settings && persisted.settings.focusModeEnabled === undefined) {
+          persisted.settings.focusModeEnabled = true
         }
 
         return persisted

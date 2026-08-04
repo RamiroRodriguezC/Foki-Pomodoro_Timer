@@ -40,10 +40,11 @@ export interface AppSettings {
   soundSelection: SoundSelection
   volume: number            // 0 a 1
   autoSyncEnabled: boolean  // "Reproducción inteligente" — sync con fases del timer
+  focusModeEnabled: boolean // "Focus Mode" — atenúa todo salvo dial y tarea #1 durante focus
   binauralEnabled: boolean  // sin tocar, ya existe
 }
 
-export type PanelId = 'settings' | 'sound' | 'queue' | 'about' | null
+export type PanelId = 'settings' | 'sound' | 'tasks' | 'about' | null
 
 // Estado del timer basado en timestamp absoluto (Regla dura #12).
 // - 'idle': `phaseEndsAt` y `remainingSecondsPaused` son null. Sesión no iniciada.
@@ -67,5 +68,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
   soundSelection: { category: 'silence', ambientTrackId: null, musicGenre: null },
   volume: 0.6,
   autoSyncEnabled: true,
+  focusModeEnabled: true,
   binauralEnabled: false,
 }

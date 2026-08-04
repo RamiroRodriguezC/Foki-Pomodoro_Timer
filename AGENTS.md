@@ -94,13 +94,19 @@ Mecánica: un **wedge (porción de pie) sólido que arranca lleno (360°) y se v
 - **Texto central:** `mm:ss`, peso medio, `textBright`, tamaño discreto — secundario respecto al dial, ubicado debajo del círculo (no superpuesto), igual que la referencia visual.
 - **Label de fase:** debajo del tiempo, uppercase, letter-spacing amplio, chico.
 - **Animación:** el ángulo del wedge se anima con `useSharedValue` + `withTiming` (~950ms de suavizado), cálculo del path del wedge en un worklet (`'worklet'`) para correr en UI thread, no JS thread — igual criterio que un componente SVG con `Path` animado por `useAnimatedProps`.
-- **Sin efecto glow ni blur** — el estilo de referencia es plano y sólido, no se busca un efecto de resplandor sobre el wedge.
+- **Sin efecto glow ni blur** — el estilo de referencia es plano y sólido, no se busca un efecto de resplandor sobre el wedge. **Única excepción:** el halo morado de Focus Mode (ver §4.5), que es un anillo radial con gradiente, no un blur.
 
 ### 4.4 Tipografía
 Sans-serif geométrica limpia (fuente del sistema alcanza para MVP). Jerarquía: label de fase (uppercase, letter-spacing amplio, chico) → tiempo (mediano) → tarea #1 con mayor peso/tamaño que #2/#3.
  
 ### 4.5 Focus Mode
-Al iniciar sesión: fade a `focusFadeOpacity` (0.12) de todo excepto dial + tarea #1, 400ms. Se atenúan: topbar, tareas #2/#3, botones de agregar/cola, acciones de reiniciar/saltar. Al pausar: fade-in a opacidad 1, mismos 400ms.
+Mientras corre una sesión de focus (y el setting "Focus Mode" está activo, ON por defecto), todo lo no esencial se funde en 400ms:
+- **Desaparecen (opacidad 0, no tappables):** la topbar completa (gestor de tareas del header, pill de música, botón de configuración) y las tareas #2/#3.
+- **Se atenúan:** el fondo mesh a `focusFadeOpacity` (0.12) y el label de fase a ~0.4 (translúcido, no desaparece).
+- **Quedan a opacidad 1:** el dial, el número mm:ss y la tarea #1.
+- **Halo morado:** anillo radial con gradiente (`gradientStart`, pico ~0.35) alrededor del dial — la única excepción a "sin glow" (§4.3). Solo en focus mode.
+
+Al pausar, cambiar de fase o desactivar el setting: fade-in a la normalidad, mismos 400ms. Fuente de verdad: selector derivado `selectIsFocusMode` en `useAppStore` (setting AND fase focus AND corriendo) — el fade lo aplica el hook `useFocusFade(focusedOpacity, unfocusedOpacity)` en `src/components/layout/useFocusFade.ts`, nunca lógica duplicada en componentes.
 
 ## 5. Modelos de datos
  
@@ -167,7 +173,8 @@ src/
 └── components/
     ├── layout/
     │   ├── Sheet.tsx
-    │   └── Topbar.tsx
+    │   ├── Topbar.tsx
+    │   └── useFocusFade.ts   // fade sincronizado con Focus Mode (400ms)
     ├── audio/
     │   ├── AudioPill.tsx   // píldora superior: selección + play/pause
     │   ├── AudioSheet.tsx  // panel selector: silencio/ambientes/música + volumen

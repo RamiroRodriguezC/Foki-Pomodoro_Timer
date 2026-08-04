@@ -25,6 +25,7 @@ export const ICON_SILENCE: IconSpec = { set: 'feather', name: 'volume-x' }
 export const ICON_PLAY: IconSpec = { set: 'feather', name: 'play' }
 export const ICON_PAUSE: IconSpec = { set: 'feather', name: 'pause' }
 export const ICON_CHEVRON_DOWN: IconSpec = { set: 'feather', name: 'chevron-down' }
+export const ICON_CHEVRON_UP: IconSpec = { set: 'feather', name: 'chevron-up' }
 export const ICON_CHEVRON_RIGHT: IconSpec = { set: 'feather', name: 'chevron-right' }
 export const ICON_SKIP: IconSpec = { set: 'feather', name: 'skip-forward' }
 export const ICON_VOLUME: IconSpec = { set: 'feather', name: 'volume-2' }
