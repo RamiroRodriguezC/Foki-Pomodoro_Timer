@@ -13,6 +13,7 @@ import type { MusicGenre } from '../../types'
 import {
   AMBIENT_ICONS,
   AudioIcon,
+  formatTrackByline,
   GENRE_ICONS,
   GENRE_LABELS,
   ICON_CHEVRON_RIGHT,
@@ -25,6 +26,9 @@ import {
 // interno maneja cualquier cantidad de tracks — nunca depende de .length.
 const LIST_MAX_HEIGHT = 118
 const FADE_HEIGHT = 18
+// Altura fija de cada fila: el modal no cambia de tamaño según haya o no
+// línea secundaria (byline/autor). El contenido se centra verticalmente.
+const ROW_HEIGHT = 44
 
 type Tab = 'ambient' | 'music'
 
@@ -50,7 +54,9 @@ export function AudioSheet() {
   )
 
   useEffect(() => {
-    setActiveTab(soundSelection.category === 'music' ? 'music' : 'ambient')
+    if (soundSelection.category !== 'silence') {
+      setActiveTab(soundSelection.category === 'music' ? 'music' : 'ambient')
+    }
   }, [soundSelection.category])
 
   // Detección de contenido oculto para mostrar el degradé de scroll
@@ -178,7 +184,7 @@ export function AudioSheet() {
                 </View>
                 {isActive && activeTrack ? (
                   <Text style={styles.trackSub} numberOfLines={1}>
-                    {activeTrack.name}
+                    {formatTrackByline(activeTrack)}
                   </Text>
                 ) : null}
               </Pressable>
@@ -365,11 +371,13 @@ const styles = StyleSheet.create({
   },
   genreMain: {
     flex: 1,
-    paddingVertical: 7,
+    height: ROW_HEIGHT,
+    justifyContent: 'center',
     paddingHorizontal: 4,
   },
   ambientRow: {
-    paddingVertical: 7,
+    height: ROW_HEIGHT,
+    justifyContent: 'center',
     paddingHorizontal: 4,
   },
   ambientMainRow: {

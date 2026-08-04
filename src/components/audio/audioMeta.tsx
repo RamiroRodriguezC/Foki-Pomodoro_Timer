@@ -3,7 +3,10 @@ import Feather from '@expo/vector-icons/Feather'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons'
 import type { MusicGenre, SoundSelection } from '../../types'
-import { getAmbientTrack } from '../../constants/SoundLibrary'
+import {
+  type Track,
+  getAmbientTrack,
+} from '../../constants/SoundLibrary'
 
 /**
  * Meta de UI para audio: íconos y labels de tracks/géneros.
@@ -49,6 +52,15 @@ export const GENRE_ICONS: Record<MusicGenre, IconSpec> = {
 export const GENRE_LABELS: Record<MusicGenre, string> = {
   loFi: 'Lo-Fi',
   classical: 'Clásica',
+}
+
+/**
+ * Byline de una pista para la línea secundaria: `<Nombre canción> By <Autor>`.
+ * Solo nombre → `Midnight Focus` · solo autor → `By Autor` · ambos combinados.
+ */
+export function formatTrackByline(track: Track): string {
+  const author = track.author ? `By ${track.author}` : null
+  return [track.name, author].filter(Boolean).join(' ')
 }
 
 /** Renderiza un ícono según su set, con tipado por glyphMap de cada set. */
