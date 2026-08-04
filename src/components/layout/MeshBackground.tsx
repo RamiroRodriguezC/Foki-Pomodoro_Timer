@@ -1,84 +1,42 @@
 import React from 'react'
 import { StyleSheet } from 'react-native'
 import Svg, {
-  Circle,
   Defs,
-  FeGaussianBlur,
-  Filter,
+  RadialGradient,
   Rect,
+  Stop,
 } from 'react-native-svg'
 
-const VIEWBOX = 1000
-
-// Desenfoque gaussiano en unidades del viewBox: extremo para que los orbes
-// no se perciban como círculos, solo como manchas de luz difusa. A mayor
-// desviación, más se dispersa la luz y menos definido queda el orbe.
-const BLUR_STD_DEVIATION = 70
-
-// Fondo base: negro azulado muy profundo, casi negro absoluto.
-const BASE_COLOR = '#08070D'
-
-interface Orb {
-  cx: number
-  cy: number
-  r: number
-  color: string
-  opacity: number
-}
-
-// Mesh blur: neblina de color casi imperceptible en un espacio profundo.
-// Dos orbes chicos empujados a las esquinas extremas; con slice en viewBox
-// cuadrado, portrait ve la banda x∈[240,660] y desktop ve y∈[100,900], así
-// que los centros quedan apenas fuera de esas bandas y el halo entra desde
-// las esquinas en ambas plataformas. Centro limpio: el dial y el texto
-// blanco no compiten con nada.
-const ORBS: Orb[] = [
-  { cx: 220, cy: 40, r: 140, color: '#321A5A', opacity: 0.25 }, // violeta apagado, arriba-izq
-  { cx: 780, cy: 960, r: 90, color: '#4F1442', opacity: 0.2 }, // magenta oscuro, abajo-der
-]
+const VIEWBOX_WIDTH = 800
+const VIEWBOX_HEIGHT = 500
 
 /**
- * Fondo "Mesh Gradient": un único SVG full-screen con orbes desenfocados vía
- * <FeGaussianBlur> (implementado en nativo + web) sobre base plana oscura.
- * Estático: se renderiza una vez, sin animación ni re-renders.
+ * Fondo "Mesh Gradient": gradiente lineal vertical profundo + glow radial
+ * inferior-centrado de rosa oscuro para unificar la base. Un único SVG
+ * full-screen, estático: se renderiza una vez, sin animación ni re-renders.
  */
 export function MeshBackground() {
   return (
     <Svg
       style={StyleSheet.absoluteFill}
       pointerEvents="none"
-      viewBox={`0 0 ${VIEWBOX} ${VIEWBOX}`}
+      viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}
       preserveAspectRatio="xMidYMid slice"
     >
       <Defs>
-        {/* Región ampliada: el default (-10%..120% del bbox) recortaría el
-            halo de los orbes con blur alto. El blur se mide en unidades del
-            viewBox (primitiveUnits default = userSpaceOnUse), constante. */}
-        <Filter
-          id="orb-blur"
-          x="-100%"
-          y="-100%"
-          width="300%"
-          height="300%"
-          filterUnits="objectBoundingBox"
-        >
-          <FeGaussianBlur in="SourceGraphic" stdDeviation={BLUR_STD_DEVIATION} />
-        </Filter>
+        <RadialGradient id="bg_violet" cx="50%" cy="50%" r="80%">
+          <Stop offset="0%" stopColor="#140b2e" />
+          <Stop offset="50%" stopColor="#0c0a24" />
+          <Stop offset="100%" stopColor="#050510" />
+        </RadialGradient>
+        <RadialGradient id="glow_violet" cx="50%" cy="80%" r="60%">
+          <Stop offset="0%" stopColor="#2d124d" stopOpacity="0.25" />
+          <Stop offset="100%" stopColor="#050510" stopOpacity="0" />
+        </RadialGradient>
       </Defs>
 
-      <Rect x={0} y={0} width={VIEWBOX} height={VIEWBOX} fill={BASE_COLOR} />
-
-      {ORBS.map((orb, index) => (
-        <Circle
-          key={index}
-          cx={orb.cx}
-          cy={orb.cy}
-          r={orb.r}
-          fill={orb.color}
-          opacity={orb.opacity}
-          filter="url(#orb-blur)"
-        />
-      ))}
+      <Rect x={0} y={0} width={VIEWBOX_WIDTH} height={VIEWBOX_HEIGHT} fill="url(#bg_violet)" />
+      <Rect x={0} y={0} width={VIEWBOX_WIDTH} height={VIEWBOX_HEIGHT} fill="url(#glow_violet)" />
     </Svg>
   )
 }
