@@ -59,12 +59,16 @@ export function PomodoroLabel({ phase, isIdle, onPress }: PomodoroLabelProps) {
       style={[styles.pressable, fade.style]}
     >
       <View style={styles.row}>
-        {/* Indicador de "presionable": solo visible cuando el label se puede tocar.
-            Reserva espacio siempre para que el texto no se corra. */}
-        <View style={[styles.chevrons, { opacity: isIdle ? 1 : 0 }]}>
-          <AudioIcon spec={ICON_CHEVRON_UP} size={CHEVRON_SIZE} color={Colors.textMuted} />
-          <AudioIcon spec={ICON_CHEVRON_DOWN} size={CHEVRON_SIZE} color={Colors.textMuted} />
-        </View>
+        {/* Indicador de "presionable": solo se renderiza cuando el label se
+            puede tocar (idle). Flota absoluto a la izquierda del label — no
+            participa del flujo del row, así el label queda SIEMPRE centrado
+            sobre el eje del dial y del tiempo, con chevrons o sin ellos. */}
+        {isIdle ? (
+          <View style={styles.chevrons}>
+            <AudioIcon spec={ICON_CHEVRON_UP} size={CHEVRON_SIZE} color={Colors.textMuted} />
+            <AudioIcon spec={ICON_CHEVRON_DOWN} size={CHEVRON_SIZE} color={Colors.textMuted} />
+          </View>
+        ) : null}
 
         {/* Carrusel vertical: al cambiar de fase, la línea nueva baja desde arriba
             mientras la actual baja y sale por debajo, dentro de un clip de altura fija. */}
@@ -90,12 +94,19 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
     marginTop: 16,
   },
+  // Chevrons absolutos: right: '100%' los pega al borde izquierdo del label;
+  // el marginRight reproduce el gap que tenían cuando estaban en el flujo.
   chevrons: {
+    position: 'absolute',
+    right: '100%',
+    marginRight: 4,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: 0,
+    pointerEvents: 'none',
   },
   clip: {
     height: LABEL_LINE_HEIGHT,

@@ -48,10 +48,43 @@ export const MUSIC_LIBRARY: Record<MusicGenre, Track[]> = {
   ],
   classical: [
     {
-      id: 'classic-beat',
-      name: 'Classic Beat', // ⚠️ mismo caso: nombre inventado, confirmar.
+      id: 'classic-moonlight',
+      name: 'Claro de luna',
+      subtitle: 'Op. 27 n.º 2 — I. Adagio sostenuto',
+      author: 'Beethoven',
       // eslint-disable-next-line @typescript-eslint/no-require-imports -- assets estáticos de Expo se importan con require()
-      file: require('../../assets/Sounds/SoundBarrier/Classic/classicbeat.mp3'),
+      file: require('../../assets/Sounds/SoundBarrier/Classic/Paul Pitman - Moonlight Sonata, Op. 27 No. 2 - I. Adagio sostenuto.mp3'),
+    },
+    {
+      id: 'classic-goldberg-aria',
+      name: 'Variaciones Goldberg — Aria',
+      subtitle: 'BWV 988',
+      author: 'Bach',
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- assets estáticos de Expo se importan con require()
+      file: require('../../assets/Sounds/SoundBarrier/Classic/Goldberg Variations, BWV 988 - Aria.mp3'),
+    },
+    {
+      id: 'classic-nocturne-op9',
+      name: 'Nocturno Op. 9 n.º 2',
+      subtitle: 'Mi bemol mayor',
+      author: 'Chopin',
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- assets estáticos de Expo se importan con require()
+      file: require('../../assets/Sounds/SoundBarrier/Classic/Nocturne in E flat major, Op. 9 no. 2.mp3'),
+    },
+    {
+      id: 'classic-gymnopedie-1',
+      name: 'Gymnopédie n.º 1',
+      author: 'Satie',
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- assets estáticos de Expo se importan con require()
+      file: require('../../assets/Sounds/SoundBarrier/Classic/Gymnopédie no. 1.mp3'),
+    },
+    {
+      id: 'classic-italian-concerto',
+      name: 'Concierto italiano',
+      subtitle: 'BWV 971 — II. Andante',
+      author: 'Bach',
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- assets estáticos de Expo se importan con require()
+      file: require('../../assets/Sounds/SoundBarrier/Classic/Italian Concerto, BWV. 971 - 2. Andante [piano].mp3'),
     },
   ],
   // piano: [] — no crear la key hasta que existan tracks reales.
