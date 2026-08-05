@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { Sortable, SortableItem, SortableRenderItemProps } from 'react-native-reanimated-dnd'
 import { useShallow } from 'zustand/react/shallow'
@@ -10,7 +10,10 @@ import Animated, {
 } from 'react-native-reanimated'
 import * as Haptics from 'expo-haptics'
 import Feather from '@expo/vector-icons/Feather'
+import Svg, { Polygon } from 'react-native-svg'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Colors } from '../../constants/Colors'
+import { useAppStore } from '../../stores/useAppStore'
 import { useTaskStore, selectAllTasks } from '../../stores/useTaskStore'
 import { TaskInput } from './TaskInput'
 import type { Task } from '../../types'
@@ -18,7 +21,18 @@ import type { Task } from '../../types'
 const ITEM_HEIGHT = 56
 const REMOVE_DELAY_MS = 300
 const STRIKE_ANIMATION_DURATION = 200
+const TOOLTIP_GAP = 8
+const TOOLTIP_HIDE_DELAY = 180
+const TAIL_WIDTH = 14
+const TAIL_HEIGHT = 8
+// Padding lateral del panel del Sheet (styles.panelDrawer): el wrapper del
+// drawer arranca ahí dentro, y el tooltip se posiciona respecto del panel.
+const PANEL_PADDING = 20
 const isWeb = Platform.OS === 'web'
+
+// Closer del tooltip registrado por el drawer: el ScrollView web lo invoca
+// al scrollear para que la burbuja no quede anclada a una posición vieja.
+const tooltipClosers = new Set<() => void>()
 
 // Panel de tareas (drawer izquierdo): agregar arriba + lista completa
 // reordenable (drag & drop en nativo, ▲/▼ en web) y eliminable.
@@ -28,6 +42,64 @@ export function TaskDrawer() {
   const reorderTasks = useTaskStore((state) => state.reorderTasks)
   const moveTask = useTaskStore((state) => state.moveTask)
   const removeTask = useTaskStore((state) => state.removeTask)
+  const closePanel = useAppStore((state) => state.closePanel)
+  // El drawer ya no es el panel activo: sus filas no deben jugar su exiting
+  // al desmontarse (el panel entero ya se desliza). En web, reanimated clona
+  // cada fila a un "fantasma" que su MutationObserver rescata al DOM vivo al
+  // remover el contenedor → parpadeo de la lista justo después del slide-out.
+  const closing = useAppStore((state) => state.activePanel !== 'tasks')
+  const insets = useSafeAreaInsets()
+
+  // Tooltip web (burbuja con piquito): lo posee el drawer para escapar del
+  // ScrollView; las filas solo reportan el hover y la geometría del texto.
+  const [tooltip, setTooltip] = useState<{
+    text: string
+    left: number
+    top: number
+    width: number
+  } | null>(null)
+  const [tooltipSize, setTooltipSize] = useState<{ width: number; height: number } | null>(null)
+  const [wrapperWidth, setWrapperWidth] = useState(0)
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const hideTooltip = useCallback(() => {
+    setTooltip(null)
+    setTooltipSize(null)
+  }, [])
+
+  const cancelHide = useCallback(() => {
+    if (hideTimer.current) {
+      clearTimeout(hideTimer.current)
+      hideTimer.current = null
+    }
+  }, [])
+
+  // Pequeño retardo al salir del texto: permite cruzar el aire hasta la
+  // burbuja sin que se cierre (el hover de la burbuja lo cancela).
+  const scheduleHide = useCallback(() => {
+    cancelHide()
+    hideTimer.current = setTimeout(() => {
+      hideTimer.current = null
+      hideTooltip()
+    }, TOOLTIP_HIDE_DELAY)
+  }, [cancelHide, hideTooltip])
+
+  // El ScrollView cierra la burbuja al scrollear.
+  useEffect(() => {
+    tooltipClosers.add(hideTooltip)
+    return () => {
+      tooltipClosers.delete(hideTooltip)
+    }
+  }, [hideTooltip])
+
+  const showTooltip = useCallback(
+    (task: Task, rect: { left: number; top: number; width: number }) => {
+      cancelHide()
+      setTooltip({ text: task.text, ...rect })
+      setTooltipSize(null)
+    },
+    [cancelHide]
+  )
 
   /* --- Native: Sortable con drag & drop (onDrop: id, posición final) --- */
   const handleDrop = useCallback(
@@ -59,6 +131,9 @@ export function TaskDrawer() {
             task={item}
             isCurrent={item.id === tasks[0]?.id}
             onDelete={removeTask}
+            onTooltipEnter={showTooltip}
+            onTooltipLeave={scheduleHide}
+            suppressExit={closing}
             handle={
               <SortableItem.Handle>
                 <View style={styles.handle}>
@@ -72,11 +147,11 @@ export function TaskDrawer() {
         </SortableItem>
       )
     },
-    [handleDrop, removeTask, tasks]
+    [handleDrop, removeTask, tasks, showTooltip, scheduleHide, closing]
   )
 
   const renderWebItem = (task: Task, index: number) => (
-    <View key={task.id} style={styles.row}>
+    <View key={task.id} style={styles.webRowWrapper}>
       <TaskRow
         task={task}
         isCurrent={index === 0}
@@ -84,13 +159,53 @@ export function TaskDrawer() {
         onMove={moveTask}
         moveUpDisabled={index === 0}
         moveDownDisabled={index === tasks.length - 1}
+        onTooltipEnter={showTooltip}
+        onTooltipLeave={scheduleHide}
+        suppressExit={closing}
       />
     </View>
   )
 
+  // Burbuja centrada sobre el texto, con el piquito apuntando al centro del
+  // texto; se clampa dentro del ancho del drawer (wrapper del drawer).
+  const tooltipLeft =
+    tooltip && tooltipSize
+      ? PANEL_PADDING +
+        Math.max(
+          0,
+          Math.min(
+            tooltip.left + tooltip.width / 2 - PANEL_PADDING - tooltipSize.width / 2,
+            wrapperWidth > 0 ? wrapperWidth - tooltipSize.width : tooltipSize.width
+          )
+        )
+      : 0
+  const tooltipTop =
+    tooltip && tooltipSize
+      ? tooltip.top - tooltipSize.height - TAIL_HEIGHT - TOOLTIP_GAP
+      : (tooltip?.top ?? 0)
+
   return (
-    <View style={styles.wrapper}>
-      <Text style={styles.title}>Tareas</Text>
+    <View
+      style={styles.wrapper}
+      onLayout={(e) => {
+        const w = e.nativeEvent.layout.width
+        if (w !== wrapperWidth) setWrapperWidth(w)
+      }}
+    >
+      {/* Header alineado con el Topbar: el back queda en el MISMO punto de
+          pantalla que el TaskButton (x 16, y insets.top + 8) para toggle ágil. */}
+      <View style={[styles.headerRow, { marginTop: insets.top - 12 }]}>
+        <Pressable
+          onPress={closePanel}
+          style={styles.backBtn}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Cerrar tareas"
+        >
+          <Feather name="arrow-left" size={18} color={Colors.textSecondary} />
+        </Pressable>
+        <Text style={styles.title}>Tareas</Text>
+      </View>
       <TaskInput />
 
       {tasks.length === 0 ? (
@@ -99,7 +214,11 @@ export function TaskDrawer() {
         </View>
       ) : isWeb ? (
         /* --- Web sin drag: lista plana con botones ▲/▼ --- */
-        <ScrollView style={styles.webList} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          style={styles.webList}
+          showsVerticalScrollIndicator={false}
+          onScroll={() => tooltipClosers.forEach((close) => close())}
+        >
           {tasks.map(renderWebItem)}
         </ScrollView>
       ) : (
@@ -110,6 +229,44 @@ export function TaskDrawer() {
           <Sortable data={tasks} renderItem={renderSortableItem} itemHeight={ITEM_HEIGHT} />
         </View>
       )}
+
+      {/* Burbuja de texto completo (web, solo si el texto está truncado).
+          Position absolute respecto del panel del Sheet (tiene transform) y
+          fuera del ScrollView: no la recorta ni la tapa ninguna fila. */}
+      {isWeb && tooltip ? (
+        <View
+          style={[
+            styles.tooltip,
+            tooltipSize
+              ? { left: tooltipLeft, top: tooltipTop, opacity: 1 }
+              : { left: tooltip.left, top: tooltip.top, opacity: 0 },
+          ]}
+          onLayout={(e) => {
+            const { width, height } = e.nativeEvent.layout
+            setTooltipSize((prev) =>
+              prev && prev.width === width && prev.height === height ? prev : { width, height }
+            )
+          }}
+          onPointerEnter={cancelHide}
+          onPointerLeave={scheduleHide}
+        >
+          <Text style={styles.tooltipText} numberOfLines={3}>
+            {tooltip.text}
+          </Text>
+          {/* Piquito: triángulo apuntando al centro del texto. */}
+          <Svg
+            style={styles.tooltipTail}
+            width={TAIL_WIDTH}
+            height={TAIL_HEIGHT}
+            viewBox={`0 0 ${TAIL_WIDTH} ${TAIL_HEIGHT}`}
+          >
+            <Polygon
+              points={`0,0 ${TAIL_WIDTH},0 ${TAIL_WIDTH / 2},${TAIL_HEIGHT}`}
+              fill={Colors.surfaceLight}
+            />
+          </Svg>
+        </View>
+      ) : null}
     </View>
   )
 }
@@ -124,10 +281,19 @@ interface TaskRowProps {
   moveDownDisabled?: boolean
   /** Handle de drag nativo (SortableItem.Handle). Null en web. */
   handle?: React.ReactNode
+  /** Web: hover sobre el texto truncado → el drawer muestra la burbuja. */
+  onTooltipEnter: (task: Task, rect: { left: number; top: number; width: number }) => void
+  /** Web: el puntero salió de la zona del texto. */
+  onTooltipLeave: () => void
+  /** El drawer se está cerrando: no jugar el exiting de la fila al desmontar. */
+  suppressExit: boolean
 }
 
-// Fila del drawer: tap = completar/tachar (FR6), basurero = eliminar directo,
-// y reordenar según plataforma. La tarea actual se resalta.
+// Fila del drawer: solo la checkbox tacha/completa (FR6); el texto no es
+// pressable — es la zona de hover que reporta el tooltip web. Basurero =
+// eliminar directo, y reordenar según plataforma. La tarea actual se resalta.
+// Los controles (basurero + flechas/handle) viven en una zona de ancho
+// fijo al final de la fila: el texto largo nunca los desplaza.
 function TaskRow({
   task,
   isCurrent,
@@ -136,8 +302,12 @@ function TaskRow({
   moveUpDisabled,
   moveDownDisabled,
   handle,
+  onTooltipEnter,
+  onTooltipLeave,
+  suppressExit,
 }: TaskRowProps) {
   const toggleTask = useTaskStore((state) => state.toggleTask)
+  const textRef = useRef<Text>(null)
 
   const strikeProgress = useSharedValue(task.completed ? 1 : 0)
 
@@ -160,11 +330,33 @@ function TaskRow({
     setTimeout(() => onDelete(task.id), REMOVE_DELAY_MS)
   }
 
+  // Hover web: la burbuja solo tiene sentido si el texto está truncado
+  // (scrollWidth > clientWidth en el nodo DOM del Text).
+  const handlePointerEnter = () => {
+    if (!isWeb) return
+    const textEl = textRef.current as unknown as HTMLElement | null
+    if (!textEl || textEl.scrollWidth <= textEl.clientWidth) return
+    const rect = textEl.getBoundingClientRect()
+    onTooltipEnter(task, { left: rect.left, top: rect.top, width: rect.width })
+  }
+
   return (
-    <Animated.View style={styles.row} exiting={FadeOut.duration(200)}>
-      <Pressable onPress={handleComplete} hitSlop={8} style={styles.completeArea}>
-        <View style={[styles.checkbox, task.completed && styles.checkboxChecked]} />
+    <Animated.View
+      style={styles.row}
+      exiting={suppressExit ? undefined : FadeOut.duration(200)}
+    >
+      <Pressable
+        onPress={handleComplete}
+        hitSlop={12}
+        style={[styles.checkbox, task.completed && styles.checkboxChecked]}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: task.completed }}
+        accessibilityLabel={task.text}
+      />
+
+      <View style={styles.textZone} onPointerEnter={handlePointerEnter} onPointerLeave={onTooltipLeave}>
         <Animated.Text
+          ref={textRef}
           style={[
             styles.taskText,
             isCurrent && styles.taskTextCurrent,
@@ -175,7 +367,7 @@ function TaskRow({
         >
           {task.text}
         </Animated.Text>
-      </Pressable>
+      </View>
 
       {isCurrent ? (
         <View style={styles.currentTag}>
@@ -183,36 +375,38 @@ function TaskRow({
         </View>
       ) : null}
 
-      <Pressable
-        onPress={() => onDelete(task.id)}
-        style={styles.deleteBtn}
-        hitSlop={8}
-        accessibilityRole="button"
-        accessibilityLabel="Eliminar tarea"
-      >
-        <Feather name="trash-2" size={15} color={Colors.textMuted} />
-      </Pressable>
+      <View style={styles.controlsZone}>
+        <Pressable
+          onPress={() => onDelete(task.id)}
+          style={styles.deleteBtn}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Eliminar tarea"
+        >
+          <Feather name="trash-2" size={15} color={Colors.textMuted} />
+        </Pressable>
 
-      {handle ? (
-        handle
-      ) : onMove ? (
-        <View style={styles.webControls}>
-          <Pressable
-            onPress={() => onMove(task.id, 'up')}
-            disabled={moveUpDisabled}
-            style={[styles.arrowBtn, moveUpDisabled && styles.arrowDisabled]}
-          >
-            <Text style={styles.arrow}>▲</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => onMove(task.id, 'down')}
-            disabled={moveDownDisabled}
-            style={[styles.arrowBtn, moveDownDisabled && styles.arrowDisabled]}
-          >
-            <Text style={styles.arrow}>▼</Text>
-          </Pressable>
-        </View>
-      ) : null}
+        {handle ? (
+          handle
+        ) : onMove ? (
+          <View style={styles.webControls}>
+            <Pressable
+              onPress={() => onMove(task.id, 'up')}
+              disabled={moveUpDisabled}
+              style={[styles.arrowBtn, moveUpDisabled && styles.arrowDisabled]}
+            >
+              <Text style={styles.arrow}>▲</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => onMove(task.id, 'down')}
+              disabled={moveDownDisabled}
+              style={[styles.arrowBtn, moveDownDisabled && styles.arrowDisabled]}
+            >
+              <Text style={styles.arrow}>▼</Text>
+            </Pressable>
+          </View>
+        ) : null}
+      </View>
     </Animated.View>
   )
 }
@@ -228,6 +422,18 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     color: Colors.textSecondary,
   },
+  // Header del drawer: el back usa la misma geometría que el TaskButton
+  // (padding 8 + ícono 18) y -4 compensa el padding 20 del panel vs los
+  // 16 del Topbar → misma caja en pantalla para abrir y cerrar.
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginLeft: -4,
+  },
+  backBtn: {
+    padding: 8,
+  },
   // Contenedor que crea la librería alrededor del item (position:absolute).
   itemContainer: {
     backgroundColor: Colors.surface,
@@ -240,6 +446,10 @@ const styles = StyleSheet.create({
     flex: 1,
     marginTop: 4,
   },
+  // Wrapper mínimo de la fila web: solo aporta key y ancho completo.
+  webRowWrapper: {
+    width: '100%',
+  },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -247,14 +457,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
-    gap: 10,
-  },
-  completeArea: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    alignSelf: 'stretch',
   },
   checkbox: {
     width: 18,
@@ -266,6 +468,13 @@ const styles = StyleSheet.create({
   checkboxChecked: {
     backgroundColor: Colors.accentOne,
     borderColor: Colors.accentOne,
+  },
+  // Zona del texto: no-pressable; es el área de hover del tooltip web.
+  textZone: {
+    flex: 1,
+    minWidth: 0,
+    marginLeft: 12,
+    justifyContent: 'center',
   },
   taskText: {
     fontSize: 15,
@@ -280,6 +489,7 @@ const styles = StyleSheet.create({
     textDecorationLine: 'line-through',
   },
   currentTag: {
+    marginLeft: 10,
     paddingVertical: 2,
     paddingHorizontal: 8,
     borderRadius: 10,
@@ -293,6 +503,14 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     color: Colors.accentOne,
   },
+  // Zona de controles de ancho fijo: el texto largo nunca la desplaza.
+  controlsZone: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    width: 84,
+    marginLeft: 10,
+  },
   deleteBtn: {
     padding: 6,
   },
@@ -304,4 +522,27 @@ const styles = StyleSheet.create({
   arrowDisabled: { opacity: 0.3 },
   emptyWrapper: { paddingVertical: 24, alignItems: 'center' },
   emptyText: { fontSize: 14, color: Colors.textMuted },
+  tooltip: {
+    position: 'absolute',
+    zIndex: 1000,
+    maxWidth: 280,
+    backgroundColor: Colors.surfaceLight,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+  },
+  tooltipText: {
+    fontSize: 13,
+    lineHeight: 17,
+    color: Colors.textPrimary,
+  },
+  // Piquito de la burbuja: triángulo SVG solapado 1px sobre el borde inferior.
+  tooltipTail: {
+    position: 'absolute',
+    left: '50%',
+    marginLeft: -TAIL_WIDTH / 2,
+    bottom: -TAIL_HEIGHT + 1,
+  },
 })

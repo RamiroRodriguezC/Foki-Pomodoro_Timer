@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Modal, Platform, Pressable, StyleSheet, View } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
@@ -20,9 +20,20 @@ const isWeb = Platform.OS === 'web'
 export function Sheet({ visible, onClose, children, placement = 'bottom' }: SheetProps) {
   const isLeft = placement === 'left'
   const progress = useSharedValue(visible ? 1 : 0)
+  // El Modal desmonta el contenido al instante con visible=false, lo que
+  // mataría la animación de salida. mounted gatea el desmonte: se mantiene
+  // montado mientras withTiming(0) corre y recién se desmonta al terminar.
+  const [mounted, setMounted] = useState(visible)
 
   useEffect(() => {
-    progress.value = withTiming(visible ? 1 : 0, { duration: ANIMATION_DURATION })
+    if (visible) {
+      setMounted(true)
+      progress.value = withTiming(1, { duration: ANIMATION_DURATION })
+    } else {
+      progress.value = withTiming(0, { duration: ANIMATION_DURATION }, (finished) => {
+        if (finished) setMounted(false)
+      })
+    }
   }, [visible, progress])
 
   const backdropStyle = useAnimatedStyle(() => ({ opacity: progress.value }))
@@ -47,7 +58,7 @@ export function Sheet({ visible, onClose, children, placement = 'bottom' }: Shee
   })
 
   return (
-    <Modal visible={visible} transparent animationType="none" onRequestClose={onClose}>
+    <Modal visible={mounted} transparent animationType="none" onRequestClose={onClose}>
       {/* GestureHandlerRootView debe ser raíz del Modal: en Android el Modal abre
           una ventana nativa separada y el root de App.tsx no captura gestos ahí.
           El Sortable (react-native-reanimated-dnd) necesita este root para el drag. */}

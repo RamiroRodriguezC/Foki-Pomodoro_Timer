@@ -55,25 +55,32 @@ export function TaskItem({ task, isPrimary }: TaskItemProps) {
   }
 
   return (
+    // El wrapper exterior lleva las layout animations (exiting/layout) y NO
+    // la opacidad del focus fade: si convivieran, en web el keyframe del
+    // FadeOut pisa la opacidad inline ("may be overwritten by a layout
+    // animation") → la fila parpadea a opacidad 1 al eliminarse con focus
+    // mode activo. El fade va en un Animated.View interior, separado.
     <Animated.View
-      style={[styles.wrapper, !isPrimary && fade.style]}
+      style={styles.wrapper}
       exiting={FadeOut.duration(300)}
       layout={LinearTransition.springify()}
       pointerEvents={!isPrimary && fade.isFocusMode ? 'none' : 'auto'}
     >
-      <Pressable onPress={handlePress} style={styles.pressable} hitSlop={8}>
-        <View style={[styles.checkbox, task.completed && styles.checkboxChecked]} />
-        <Animated.Text
-          style={[
-            isPrimary ? styles.textPrimary : styles.textSecondary,
-            animatedTextStyle,
-            task.completed && styles.textStrike,
-          ]}
-          numberOfLines={1}
-        >
-          {task.text}
-        </Animated.Text>
-      </Pressable>
+      <Animated.View style={!isPrimary && fade.style}>
+        <Pressable onPress={handlePress} style={styles.pressable} hitSlop={8}>
+          <View style={[styles.checkbox, task.completed && styles.checkboxChecked]} />
+          <Animated.Text
+            style={[
+              isPrimary ? styles.textPrimary : styles.textSecondary,
+              animatedTextStyle,
+              task.completed && styles.textStrike,
+            ]}
+            numberOfLines={1}
+          >
+            {task.text}
+          </Animated.Text>
+        </Pressable>
+      </Animated.View>
     </Animated.View>
   )
 }
