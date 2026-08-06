@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
-import { Sortable, SortableItem, SortableRenderItemProps } from 'react-native-reanimated-dnd'
+import { SortableTaskList, TASK_ROW_HEIGHT } from './SortableTaskList'
 import { useShallow } from 'zustand/react/shallow'
 import Animated, {
   FadeOut,
@@ -18,7 +18,6 @@ import { useTaskStore, selectAllTasks } from '../../stores/useTaskStore'
 import { TaskInput } from './TaskInput'
 import type { Task } from '../../types'
 
-const ITEM_HEIGHT = 56
 const REMOVE_DELAY_MS = 300
 const STRIKE_ANIMATION_DURATION = 200
 const TOOLTIP_GAP = 8
@@ -101,53 +100,21 @@ export function TaskDrawer() {
     [cancelHide]
   )
 
-  /* --- Native: Sortable con drag & drop (onDrop: id, posición final) --- */
-  const handleDrop = useCallback(
-    (id: string, position: number) => {
-      const ids = tasks.map((task) => task.id)
-      const fromIndex = ids.indexOf(id)
-      if (fromIndex === -1) return
-      const next = [...ids]
-      const [moved] = next.splice(fromIndex, 1)
-      next.splice(position, 0, moved)
-      reorderTasks(next)
-    },
-    [tasks, reorderTasks]
-  )
-
-  const renderSortableItem = useCallback(
-    (props: SortableRenderItemProps<Task>) => {
-      const { item, id, ...rest } = props
-      return (
-        <SortableItem
-          key={id}
-          id={id}
-          data={item}
-          onDrop={handleDrop}
-          style={styles.itemContainer}
-          {...rest}
-        >
-          <TaskRow
-            task={item}
-            isCurrent={item.id === tasks[0]?.id}
-            onDelete={removeTask}
-            onTooltipEnter={showTooltip}
-            onTooltipLeave={scheduleHide}
-            suppressExit={closing}
-            handle={
-              <SortableItem.Handle>
-                <View style={styles.handle}>
-                  <View style={styles.handleDot} />
-                  <View style={styles.handleDot} />
-                  <View style={styles.handleDot} />
-                </View>
-              </SortableItem.Handle>
-            }
-          />
-        </SortableItem>
-      )
-    },
-    [handleDrop, removeTask, tasks, showTooltip, scheduleHide, closing]
+  /* --- Native: SortableTaskList (drag & drop por handle) --- */
+  // El sortable arma el handle y persiste el orden completo con onReorder.
+  const renderRow = useCallback(
+    (task: Task, isCurrent: boolean, handle: React.ReactNode) => (
+      <TaskRow
+        task={task}
+        isCurrent={isCurrent}
+        onDelete={removeTask}
+        onTooltipEnter={showTooltip}
+        onTooltipLeave={scheduleHide}
+        suppressExit={closing}
+        handle={handle}
+      />
+    ),
+    [removeTask, showTooltip, scheduleHide, closing]
   )
 
   const renderWebItem = (task: Task, index: number) => (
@@ -222,11 +189,11 @@ export function TaskDrawer() {
           {tasks.map(renderWebItem)}
         </ScrollView>
       ) : (
-        /* --- Native: Sortable drag & drop --- */
-        // Sortable usa position:absolute internamente, no aporta altura al padre.
+        /* --- Native: SortableTaskList con drag & drop --- */
+        // Las filas son position:absolute, no aportan altura al padre.
         // Envolvemos en un View con altura explícita para que el drawer se dimensione bien.
-        <View style={[styles.listContainer, { height: tasks.length * ITEM_HEIGHT }]}>
-          <Sortable data={tasks} renderItem={renderSortableItem} itemHeight={ITEM_HEIGHT} />
+        <View style={[styles.listContainer, { height: tasks.length * TASK_ROW_HEIGHT }]}>
+          <SortableTaskList tasks={tasks} onReorder={reorderTasks} renderRow={renderRow} />
         </View>
       )}
 
@@ -279,7 +246,7 @@ interface TaskRowProps {
   onMove?: (id: string, direction: 'up' | 'down') => void
   moveUpDisabled?: boolean
   moveDownDisabled?: boolean
-  /** Handle de drag nativo (SortableItem.Handle). Null en web. */
+  /** Handle de drag nativo (grip de 6 puntitos del SortableTaskList). Null en web. */
   handle?: React.ReactNode
   /** Web: hover sobre el texto truncado → el drawer muestra la burbuja. */
   onTooltipEnter: (task: Task, rect: { left: number; top: number; width: number }) => void
@@ -434,11 +401,7 @@ const styles = StyleSheet.create({
   backBtn: {
     padding: 8,
   },
-  // Contenedor que crea la librería alrededor del item (position:absolute).
-  itemContainer: {
-    backgroundColor: Colors.surface,
-  },
-  // Wrapper de altura explícita para el Sortable (nativo).
+  // Wrapper de altura explícita para el SortableTaskList (nativo).
   listContainer: {
     backgroundColor: Colors.surface,
   },
@@ -453,7 +416,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: ITEM_HEIGHT,
+    height: TASK_ROW_HEIGHT,
     paddingHorizontal: 4,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
@@ -514,8 +477,6 @@ const styles = StyleSheet.create({
   deleteBtn: {
     padding: 6,
   },
-  handle: { paddingLeft: 10, gap: 3 },
-  handleDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: Colors.textMuted },
   webControls: { flexDirection: 'row', gap: 2 },
   arrowBtn: { padding: 6 },
   arrow: { fontSize: 12, color: Colors.textSecondary },

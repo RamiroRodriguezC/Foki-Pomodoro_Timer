@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Modal, Platform, Pressable, StyleSheet, View } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
+import Animated, { runOnJS, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 import { Colors } from '../../constants/Colors'
 
 interface SheetProps {
@@ -31,7 +31,9 @@ export function Sheet({ visible, onClose, children, placement = 'bottom' }: Shee
       progress.value = withTiming(1, { duration: ANIMATION_DURATION })
     } else {
       progress.value = withTiming(0, { duration: ANIMATION_DURATION }, (finished) => {
-        if (finished) setMounted(false)
+        // El worklet corre en el UI thread (nativo): los setters de React no se
+        // pueden llamar directo, se cruza con runOnJS (ver PomodoroLabel).
+        if (finished) runOnJS(setMounted)(false)
       })
     }
   }, [visible, progress])
@@ -61,7 +63,8 @@ export function Sheet({ visible, onClose, children, placement = 'bottom' }: Shee
     <Modal visible={mounted} transparent animationType="none" onRequestClose={onClose}>
       {/* GestureHandlerRootView debe ser raíz del Modal: en Android el Modal abre
           una ventana nativa separada y el root de App.tsx no captura gestos ahí.
-          El Sortable (react-native-reanimated-dnd) necesita este root para el drag. */}
+          Los GestureDetector del drag & drop (SortableTaskList) necesitan este
+          root para el drag. */}
       <GestureHandlerRootView style={StyleSheet.absoluteFill}>
         <Animated.View style={[styles.backdrop, backdropStyle]}>
           <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />

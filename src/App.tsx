@@ -1,7 +1,7 @@
 import { StatusBar } from 'expo-status-bar'
 import { ScrollView, StyleSheet, View } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
-import { SafeAreaProvider } from 'react-native-safe-area-context'
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Colors } from './constants/Colors'
 import { Timer } from './components/timer/Timer'
 import { TaskList } from './components/tasks/TaskList'
@@ -13,38 +13,54 @@ import { Sheet } from './components/layout/Sheet'
 import { useAppStore } from './stores/useAppStore'
 import { SettingsPanel } from './components/settings/SettingsPanel'
 
+// Alto reservado arriba para no chocar nunca con el Topbar (insets.top + su
+// propio padding/contenido), y gap de seguridad abajo contra el borde real
+// de la pantalla — mismo criterio que insets.bottom + margen fijo de antes.
+const TOP_SAFE_GAP = 76
+const BOTTOM_SAFE_GAP = 24
+
 function AppContent() {
   const activePanel = useAppStore((state) => state.activePanel)
   const closePanel = useAppStore((state) => state.closePanel)
+  const insets = useSafeAreaInsets()
 
   return (
     <View style={styles.container}>
       <MeshBackground />
+
+      {/* Dos spacers flex:1 simétricos alrededor del Timer (alto fijo) →
+          el dial queda en el centro EXACTO de la pantalla; las tareas
+          cuelgan del fondo con el margen de seguridad de paddingBottom.
+          El ScrollView es solo red de seguridad: cuando el contenido entra
+          (caso normal) no scrollea nada; cuando NO entra en pantallas bajas,
+          los spacers colapsan a 0 y la columna completa scrollea en vez de
+          recortarse por fuera del viewport. No reemplazar los spacers por
+          justifyContent:'center' del contentContainer: eso centra el BLOQUE
+          (Timer+tareas) y el dial queda ~160px arriba del centro real. */}
+      <ScrollView
+        style={styles.mainScroll}
+        contentContainerStyle={[
+          styles.mainContent,
+          { paddingTop: insets.top + TOP_SAFE_GAP, paddingBottom: insets.bottom + BOTTOM_SAFE_GAP },
+        ]}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+      >
+        <View style={styles.spacer} />
+        <Timer />
+        <View style={styles.spacer} />
+        <TaskList />
+      </ScrollView>
+
+      {/* Topbar DESPUÉS del ScrollView: el hit-testing de RN va de arriba
+          hacia abajo entre siblings, y un ScrollView a pantalla completa
+          renderizado después taparía los botones del header (los toques
+          caerían en el scroll, no en los botones). Al ir al final queda por
+          encima; su wrapper es absolute con pointerEvents box-none, así que
+          solo captura sus propios botones y el resto de la franja sigue
+          scrolleando. El paddingTop del contenido ya evita que haya cosas
+          interactivas debajo de esta franja. */}
       <Topbar />
-
-      {/* topSpacer y bottomZone comparten el MISMO flex (1) → siempre miden
-          lo mismo entre sí. Eso es lo que centra al Timer en el medio REAL
-          de la pantalla (no aproximado) y, de paso, fija el alto de
-          bottomZone independientemente de cuántas tareas haya — solo cambia
-          si el propio Timer cambia de alto (ej. aparece el ResetButton al
-          pausar, que ya se comportaba así antes de tocar este archivo).
-          No reemplazar por valores fijos ni position:absolute — ya se
-          probaron y generan overlap o desalineación. */}
-      <View style={styles.topSpacer} pointerEvents="none" />
-
-      <Timer />
-
-      <View style={styles.bottomZone}>
-        {/* Solo la lista de tareas activas scrollea (máx. 3). El resto de la
-            gestión (agregar, reordenar, eliminar) vive en el drawer izquierdo. */}
-        <ScrollView
-          style={styles.bottomScroll}
-          contentContainerStyle={styles.bottomContent}
-          showsVerticalScrollIndicator={false}
-        >
-          <TaskList />
-        </ScrollView>
-      </View>
 
       <Sheet visible={activePanel === 'tasks'} onClose={closePanel} placement="left">
         <TaskDrawer />
@@ -77,20 +93,17 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
     alignItems: 'center',
   },
-  topSpacer: {
+  mainScroll: {
     flex: 1,
     width: '100%',
   },
-  bottomZone: {
-    flex: 1,
+  mainContent: {
+    flexGrow: 1,
     width: '100%',
-  },
-  bottomScroll: {
-    flex: 1,
-    width: '100%',
-    minHeight: 0,
-  },
-  bottomContent: {
     alignItems: 'center',
+  },
+  spacer: {
+    flex: 1,
+    width: '100%',
   },
 })

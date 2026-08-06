@@ -66,8 +66,14 @@ export function Timer() {
         isIdle={timer.status === 'idle'}
         onPress={cyclePhase}
       />
-      <TimerDisplay label={formatMMSS(remainingSeconds)} />
-      <ResetButton />
+      {/* El ResetButton flota ABSOLUTO a la derecha de esta fila (patrón de
+          los chevrons del label): no participa del flujo, así el mm:ss queda
+          siempre centrado sobre el eje del dial y el Timer no cambia de alto
+          nunca — ni al pausar ni al reanudar. */}
+      <View style={styles.displayRow}>
+        <TimerDisplay label={formatMMSS(remainingSeconds)} />
+        <ResetButton />
+      </View>
     </View>
   )
 }
@@ -76,5 +82,10 @@ const styles = StyleSheet.create({
   wrapper: {
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  displayRow: {
+    position: 'relative',
+    marginTop: 6,
+    alignSelf: 'center',
   },
 })
