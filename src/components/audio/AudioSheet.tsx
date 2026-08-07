@@ -17,6 +17,7 @@ import {
   GENRE_ICONS,
   GENRE_LABELS,
   ICON_CHEVRON_RIGHT,
+  ICON_REPEAT,
   ICON_SILENCE,
   ICON_SKIP,
   ICON_VOLUME,
@@ -44,6 +45,8 @@ export function AudioSheet() {
   const playSelection = useAudioStore((state) => state.playSelection)
   const pausePlayback = useAudioStore((state) => state.pausePlayback)
   const skipMusicTrack = useAudioStore((state) => state.skipMusicTrack)
+  const applyMusicLoop = useAudioStore((state) => state.applyMusicLoop)
+  const setMusicLoopEnabled = useAppStore((state) => state.setMusicLoopEnabled)
 
   const { soundSelection } = settings
 
@@ -92,6 +95,14 @@ export function AudioSheet() {
     },
     [playSelection, selectMusicGenre]
   )
+
+  // Toggle "Repetir canción": persiste en settings + aplica en vivo al player
+  // (sin reiniciar la pista). El botón solo existe en géneros con >1 track.
+  const handleLoopToggle = useCallback(() => {
+    const next = !settings.musicLoopEnabled
+    setMusicLoopEnabled(next)
+    applyMusicLoop(next)
+  }, [applyMusicLoop, setMusicLoopEnabled, settings.musicLoopEnabled])
 
   // Volumen: aplicar en vivo mientras se arrastra (sin fade); persistir al soltar.
   const handleVolumeChange = useCallback((value: number) => {
@@ -189,18 +200,43 @@ export function AudioSheet() {
                 ) : null}
               </Pressable>
               {isActive && (
-                <Pressable
-                  style={styles.skipBtn}
-                  onPress={() =>
-                    skipMusicTrack(useAppStore.getState().settings.soundSelection)
-                  }
-                  hitSlop={8}
-                  accessibilityRole="button"
-                  accessibilityLabel="Saltar pista"
-                >
-                  <AudioIcon spec={ICON_SKIP} size={14} color={Colors.accentTwo} />
-                  <Text style={styles.skipText}>Saltar</Text>
-                </Pressable>
+                <View style={styles.rowActions}>
+                  {tracks.length > 1 && (
+                    <Pressable
+                      style={styles.loopBtn}
+                      onPress={handleLoopToggle}
+                      hitSlop={8}
+                      accessibilityRole="button"
+                      accessibilityLabel={
+                        settings.musicLoopEnabled
+                          ? 'Repetir canción activado'
+                          : 'Repetir canción'
+                      }
+                    >
+                      <AudioIcon
+                        spec={ICON_REPEAT}
+                        size={14}
+                        color={
+                          settings.musicLoopEnabled
+                            ? Colors.accentOne
+                            : Colors.textMuted
+                        }
+                      />
+                    </Pressable>
+                  )}
+                  <Pressable
+                    style={styles.skipBtn}
+                    onPress={() =>
+                      skipMusicTrack(useAppStore.getState().settings.soundSelection)
+                    }
+                    hitSlop={8}
+                    accessibilityRole="button"
+                    accessibilityLabel="Saltar pista"
+                  >
+                    <AudioIcon spec={ICON_SKIP} size={14} color={Colors.accentTwo} />
+                    <Text style={styles.skipText}>Saltar</Text>
+                  </Pressable>
+                </View>
               )}
             </View>
           )
@@ -424,6 +460,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     paddingLeft: 8,
+  },
+  rowActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  loopBtn: {
+    paddingLeft: 4,
   },
   skipText: {
     fontSize: 12,

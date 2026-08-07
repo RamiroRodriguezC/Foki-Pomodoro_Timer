@@ -43,6 +43,7 @@ interface AppStoreActions {
   setVolume: (volume: number) => void
   setAutoSyncEnabled: (enabled: boolean) => void
   setFocusModeEnabled: (enabled: boolean) => void
+  setMusicLoopEnabled: (enabled: boolean) => void
   setBinauralEnabled: (enabled: boolean) => void
   // Paneles (máx. 2 niveles: pantalla principal → panel — Regla dura #4)
   openPanel: (panel: Exclude<PanelId, null>) => void
@@ -61,6 +62,7 @@ interface PersistedStateV1 {
     volume?: number
     autoSyncEnabled?: boolean
     focusModeEnabled?: boolean
+    musicLoopEnabled?: boolean
     soundSelection?: SoundSelection
   }
   timer?: Partial<TimerState> & { isRunning?: boolean }
@@ -228,7 +230,10 @@ export const useAppStore = create<AppStore>()(
         if (upcomingPhase === 'break' || upcomingPhase === 'longBreak') {
           // Silencio total durante descansos (decisión de diseño fija, no depende de autoSyncEnabled)
           AudioService.fadeTo(0, 1500).then(() => {
-            AudioService.stop()
+            // stopPlayback limpia también currentTrackId: al volver a focus el
+            // store pasa por playSelection() y recarga el track (el player fue
+            // destruido, un resume() a secas sería un no-op silencioso).
+            useAudioStore.getState().stopPlayback()
           })
         } else if (upcomingPhase === 'focus') {
           // Volver a focus: auto-sync si está habilitado
@@ -354,6 +359,10 @@ export const useAppStore = create<AppStore>()(
         set((state) => ({ settings: { ...state.settings, focusModeEnabled } }))
       },
 
+      setMusicLoopEnabled: (musicLoopEnabled) => {
+        set((state) => ({ settings: { ...state.settings, musicLoopEnabled } }))
+      },
+
       setBinauralEnabled: (binauralEnabled) => {
         set((state) => ({ settings: { ...state.settings, binauralEnabled } }))
       },
@@ -364,7 +373,7 @@ export const useAppStore = create<AppStore>()(
     {
       name: 'foki-app-storage',
       storage: createJSONStorage(() => storage),
-      version: 3,
+      version: 4,
       // Shape viejo persistido (versiones 0 y 1): shape v1 (soundBarrier) y v0 (timer sin status).
       // El resto de campos se valida contra los defaults al leer.
       migrate: (persistedState: unknown, version: number) => {
@@ -459,6 +468,11 @@ export const useAppStore = create<AppStore>()(
         // Migración de version < 3: agregar el setting de Focus Mode (default ON)
         if (version < 3 && persisted.settings && persisted.settings.focusModeEnabled === undefined) {
           persisted.settings.focusModeEnabled = true
+        }
+
+        // Migración de version < 4: agregar el setting de loop de música (default OFF)
+        if (version < 4 && persisted.settings && persisted.settings.musicLoopEnabled === undefined) {
+          persisted.settings.musicLoopEnabled = false
         }
 
         return persisted

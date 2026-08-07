@@ -28,6 +28,7 @@ export const ICON_CHEVRON_DOWN: IconSpec = { set: 'feather', name: 'chevron-down
 export const ICON_CHEVRON_UP: IconSpec = { set: 'feather', name: 'chevron-up' }
 export const ICON_CHEVRON_RIGHT: IconSpec = { set: 'feather', name: 'chevron-right' }
 export const ICON_SKIP: IconSpec = { set: 'feather', name: 'skip-forward' }
+export const ICON_REPEAT: IconSpec = { set: 'feather', name: 'repeat' }
 export const ICON_VOLUME: IconSpec = { set: 'feather', name: 'volume-2' }
 
 // Íconos por id de track de AMBIENT_LIBRARY. Los ids futuros (Bosque, Café,

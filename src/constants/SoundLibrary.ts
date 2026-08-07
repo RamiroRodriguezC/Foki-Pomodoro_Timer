@@ -34,8 +34,8 @@ export const AMBIENT_LIBRARY: Track[] = [
   // Bosque, Café, Olas, Fuego: agregar acá cuando exista el .mp3 real.
 ]
 
-// --- Música: cada género es una mini-playlist. Hoy cada una tiene 1 sola
-// pista, pero el shape soporta N pistas (para "Saltar Pista"). ---
+// --- Música: cada género es una mini-playlist. El auto-avance de pistas y
+// "Saltar Pista" dependen de tener >1 pista por género. ---
 export const MUSIC_LIBRARY: Record<MusicGenre, Track[]> = {
   loFi: [
     {
@@ -44,6 +44,39 @@ export const MUSIC_LIBRARY: Record<MusicGenre, Track[]> = {
                                 // si el track tiene un nombre "oficial" distinto al del archivo.
       // eslint-disable-next-line @typescript-eslint/no-require-imports -- assets estáticos de Expo se importan con require()
       file: require('../../assets/Sounds/SoundBarrier/Lo-Fi/lofiBeat1.mp3'),
+    },
+    {
+      id: 'lofi-alone-time',
+      name: 'Alone Time',
+      author: 'Purrple Cat',
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- assets estáticos de Expo se importan con require()
+      file: require('../../assets/Sounds/SoundBarrier/Lo-Fi/Alone Time.mp3'),
+    },
+    {
+      id: 'lofi-midnight-snack',
+      name: 'Midnight Snack',
+      author: 'Purrple Cat',
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- assets estáticos de Expo se importan con require()
+      file: require('../../assets/Sounds/SoundBarrier/Lo-Fi/Midnight Snack.mp3'),
+    },
+    {
+      id: 'lofi-snooze-button',
+      name: 'Snooze Button',
+      author: 'Purrple Cat',
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- assets estáticos de Expo se importan con require()
+      file: require('../../assets/Sounds/SoundBarrier/Lo-Fi/Snooze Button.mp3'),
+    },
+    {
+      id: 'lofi-dusk-horizon',
+      name: 'Dusk Horizon', // ⚠️ sin tags de metadata — nombre derivado del filename (fsm-team-escp), confirmar con el usuario
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- assets estáticos de Expo se importan con require()
+      file: require('../../assets/Sounds/SoundBarrier/Lo-Fi/fsm-team-escp-dusk-horizon.mp3'),
+    },
+    {
+      id: 'lofi-rain-book-and-tea',
+      name: 'Rain, Book and Cup of Tea', // ⚠️ sin tags de metadata — nombre derivado del filename (fsm-team-escp), confirmar con el usuario
+      // eslint-disable-next-line @typescript-eslint/no-require-imports -- assets estáticos de Expo se importan con require()
+      file: require('../../assets/Sounds/SoundBarrier/Lo-Fi/fsm-team-escp-rain-book-and-cup-of-tea.mp3'),
     },
   ],
   classical: [

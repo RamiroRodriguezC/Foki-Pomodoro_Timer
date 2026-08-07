@@ -41,3 +41,5 @@ yarn-error.*
 # opencode
 .opencode/
 
+# Script para tratar audio
+assets/Sounds/tratamientoAudio.js

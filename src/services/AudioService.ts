@@ -30,10 +30,18 @@ class AudioServiceImpl {
   }
 
   /**
-   * Carga y reproduce un track de fondo en loop. Si ya hay algo sonando,
+   * Carga y reproduce un track de fondo. Si ya hay algo sonando,
    * lo reemplaza (sin crossfade entre tracks — el fade es solo in/out global).
+   *
+   * `onFinish` se dispara cuando el track termina naturalmente (solo tiene
+   * sentido con loop: false) — lo usa el store para auto-avanzar en las
+   * playlists de música. El listener muere con el player al reemplazarlo:
+   * nunca llegan callbacks stale de tracks viejos.
    */
-  async playTrack(fileModule: number, options?: { loop?: boolean }): Promise<void> {
+  async playTrack(
+    fileModule: number,
+    options?: { loop?: boolean; onFinish?: () => void }
+  ): Promise<void> {
     try {
       // Si ya hay un player activo, detenerlo y liberarlo
       if (this.player) {
@@ -48,7 +56,17 @@ class AudioServiceImpl {
       })
 
       // Configurar loop (por defecto true para tracks de fondo)
-      this.player.loop = options?.loop ?? true
+      const loop = options?.loop ?? true
+      this.player.loop = loop
+
+      // Auto-avance: escuchar el fin natural de la pista
+      if (options?.onFinish && !loop) {
+        this.player.addListener('playbackStatusUpdate', (status) => {
+          if (status.didJustFinish && this.player) {
+            options.onFinish?.()
+          }
+        })
+      }
 
       // Setear volumen actual
       this.player.volume = this.currentVolume
@@ -58,6 +76,16 @@ class AudioServiceImpl {
     } catch (error) {
       console.error('Failed to play track:', error)
       throw error
+    }
+  }
+
+  /**
+   * Aplica el modo loop en vivo sobre el track actual sin recrear el player
+   * (propiedad mutable de expo-audio) — togglear no reinicia la pista.
+   */
+  setLoop(loop: boolean): void {
+    if (this.player) {
+      this.player.loop = loop
     }
   }
 

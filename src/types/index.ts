@@ -41,6 +41,7 @@ export interface AppSettings {
   volume: number            // 0 a 1
   autoSyncEnabled: boolean  // "Reproducción inteligente" — sync con fases del timer
   focusModeEnabled: boolean // "Focus Mode" — atenúa todo salvo dial y tarea #1 durante focus
+  musicLoopEnabled: boolean // "Repetir canción" — loop de la pista actual en géneros de música (default OFF: las pistas avanzan solas)
   binauralEnabled: boolean  // sin tocar, ya existe
 }
 
@@ -69,5 +70,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
   volume: 0.6,
   autoSyncEnabled: true,
   focusModeEnabled: true,
+  musicLoopEnabled: false,
   binauralEnabled: false,
 }
