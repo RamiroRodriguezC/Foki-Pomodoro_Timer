@@ -39,13 +39,6 @@ export const AMBIENT_LIBRARY: Track[] = [
 export const MUSIC_LIBRARY: Record<MusicGenre, Track[]> = {
   loFi: [
     {
-      id: 'lofi-beat-1',
-      name: 'Midnight Focus', // ⚠️ nombre de display inventado — confirmar con el usuario
-                                // si el track tiene un nombre "oficial" distinto al del archivo.
-      // eslint-disable-next-line @typescript-eslint/no-require-imports -- assets estáticos de Expo se importan con require()
-      file: require('../../assets/Sounds/SoundBarrier/Lo-Fi/lofiBeat1.mp3'),
-    },
-    {
       id: 'lofi-alone-time',
       name: 'Alone Time',
       author: 'Purrple Cat',
