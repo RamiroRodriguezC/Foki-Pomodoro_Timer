@@ -2,9 +2,6 @@
   "expo": {
     "name": "Foki",
     "slug": "foki-pomodoro-timer",
-    "experiments": {
-      "baseUrl": "/foki"
-    },
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
