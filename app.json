@@ -2,6 +2,13 @@
   "expo": {
     "name": "Foki",
     "slug": "foki-pomodoro-timer",
+    "expo": {
+      "name": "Foki",
+      "slug": "foki",
+      "web": {
+        "output": "static"
+      }
+    },
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
